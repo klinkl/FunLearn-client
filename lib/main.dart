@@ -28,9 +28,9 @@ class MyApp extends StatelessWidget {
         //
         // This works for code too, not just values: Most code changes can be
         // tested with just a hot reload.
-        colorScheme: .fromSeed(seedColor: Colors.green),
+        colorScheme: .fromSeed(seedColor: Colors.blue),
       ),
-      home: const MyHomePage(title: 'Flutter Demo Home Page'),
+      home: const MyHomePage(title: 'FunLearn'),
     );
   }
 }
@@ -104,14 +104,35 @@ class _MyHomePageState extends State<MyHomePage> {
           // wireframe for each widget.
           mainAxisAlignment: .center,
           children: [
-            const Text('You have pushed the button this many times:'),
-            Text(
-              '$_counter',
-              style: Theme.of(context).textTheme.headlineMedium,
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Card(child: _SampleCard(cardName: 'Card 1')),
+                SizedBox(width: 16),
+                Card(child: _SampleCard(cardName: 'Card 2')),
+              ],
+            ),
+            SizedBox(height: 16),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Card(child: _SampleCard(cardName: 'Card 3')),
+                SizedBox(width: 16),
+                Card(child: _SampleCard(cardName: 'Card 4')),
+              ],
+            ),
+            SizedBox(height: 16),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Card(child: _SampleCard(cardName: 'Card 5')),
+                SizedBox(width: 16),
+                Card(child: _SampleCard(cardName: 'Card 6')),
+              ],
             ),
           ],
         ),
-      ),
+      ), //maybe use the floatingActionButton as a button to add new Anki sets?
       floatingActionButton: FloatingActionButton(
         onPressed: _incrementCounter,
         tooltip: 'Increment',
@@ -139,6 +160,19 @@ class _MyHomePageState extends State<MyHomePage> {
           label: 'Settings',
         ),
       ]),
+    );
+  }
+}
+class _SampleCard extends StatelessWidget {
+  final String cardName;
+  const _SampleCard({required this.cardName, super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      width: 150,
+      height: 100,
+      child: Center(child: Text(cardName)),
     );
   }
 }
