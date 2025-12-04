@@ -1,4 +1,7 @@
+
 import 'package:flutter/material.dart';
+
+import '../data/sqliteReader.dart';
 
 class MyHomePage extends StatefulWidget {
   const MyHomePage({super.key, required this.title});
@@ -19,16 +22,17 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
-  int _counter = 0;
+  final int _counter = 0;
 
-  void _incrementCounter() {
-    setState(() {
+  void addNewDeck() {
+    setState(() async {
       // This call to setState tells the Flutter framework that something has
       // changed in this State, which causes it to rerun the build method below
       // so that the display can reflect the updated values. If we changed
       // _counter without calling setState(), then the build method would not be
       // called again, and so nothing would appear to happen.
-      _counter++;
+
+        await sqliteReader();
     });
   }
 
@@ -99,7 +103,7 @@ class _MyHomePageState extends State<MyHomePage> {
         ),
       ), //maybe use the floatingActionButton as a button to add new Anki sets?
       floatingActionButton: FloatingActionButton(
-        onPressed: _incrementCounter,
+        onPressed: addNewDeck,
         tooltip: 'Increment',
         child: const Icon(Icons.add),
       ),
@@ -127,7 +131,7 @@ class _MyHomePageState extends State<MyHomePage> {
 
 class _SampleCard extends StatelessWidget {
   final String cardName;
-  const _SampleCard({required this.cardName, super.key});
+  const _SampleCard({required this.cardName});
 
   @override
   Widget build(BuildContext context) {

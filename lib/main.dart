@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import 'screens/learning_view.dart';
 import 'screens/cards_list_view.dart';
-
+import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 void main() {
+  sqfliteFfiInit();
   runApp(const MyApp());
 }
 
@@ -32,7 +32,7 @@ class MyApp extends StatelessWidget {
         // tested with just a hot reload.
         colorScheme: .fromSeed(seedColor: Colors.blue),
       ),
-      home: MyFlashcardScreen(),
+      home: MyHomePage(title: '',),
     );
   }
 }
