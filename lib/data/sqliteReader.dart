@@ -11,11 +11,14 @@ import 'models/card.dart';
 import 'models/deck.dart';
 
 Future<void> sqliteReader() async{
-  sqfliteFfiInit();
+  //sqfliteFfiInit();
 
-  databaseFactory = databaseFactoryFfi;
+  //databaseFactory = databaseFactoryFfi;
 
   final path = await archiveExtractor();
+  if (path==null){
+    return;
+  }
   print(path);
   //newer Anki .apkg have both collection.anki2 and collection.anki21
   // with the main information being in collection.anki21
@@ -37,9 +40,9 @@ Future<void> sqliteReader() async{
   final deckJSON = await ankidb.query("col",columns: ["decks"]);
   print(deckJSON.runtimeType);
   final deck = jsonDecode(deckJSON.first["decks"] as String) as Map<String, dynamic>;
-  deck.forEach((key, value) async {
-    final deckId = key;
-    final name = value["name"];
+  for (final entry in deck.entries) {
+    final deckId = entry.key;
+    final name = entry.value["name"];
     print("ID: $deckId   | Name: $name");
     //from the database structure as defined here: https://github.com/ankidroid/Anki-Android/wiki/Database-Structure
     final query = await ankidb.rawQuery("SELECT DISTINCT notes.sfld, notes.flds from notes, cards WHERE cards.nid = notes.id AND ? = cards.did;", [deckId]);
@@ -53,8 +56,8 @@ Future<void> sqliteReader() async{
           .forEach((row) => print('${row.deckId}${row.cardId}${row.front}${row.back}'));
 
     }
-  });
-
+  };
+  await ankidb.close();
 }
 Future<String> getAnkiVersionString(String folderPath) async {
   final fileAnki21 = File(p.join(folderPath, 'collection.anki21'));

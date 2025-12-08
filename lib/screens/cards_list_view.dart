@@ -35,11 +35,11 @@ class _MyHomePageState extends State<MyHomePage> {
   @override
   void initState() {
     super.initState();
+    sqfliteFfiInit();
+    databaseFactory = databaseFactoryFfi;
     _loadDecks();
   }
   Future<void> _loadDecks() async {
-    sqfliteFfiInit();
-    databaseFactory = databaseFactoryFfi;
     final dbHelper = DatabaseHelper();
     final fetchedDecks = await dbHelper.getDecks();
     print(fetchedDecks.length);

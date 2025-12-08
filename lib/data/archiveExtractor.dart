@@ -14,6 +14,7 @@ Future<String?> archiveExtractor() async {
   );
   if (result==null){return null;}
   final apkgPath = result.files.single.path!;
+  print(apkgPath);
   final bytes = File(apkgPath).readAsBytesSync();
   final archive = ZipDecoder().decodeBytes(bytes);
   // Extract to a temp folder
