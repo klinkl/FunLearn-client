@@ -17,10 +17,14 @@ Future<void> sqliteReader() async{
 
   final path = await archiveExtractor();
   print(path);
-  final filename = p.join(path as String, "collection.anki2");
+  //newer Anki .apkg have both collection.anki2 and collection.anki21
+  // with the main information being in collection.anki21
+  //old: only collection.anki2
+  final ankiVersion = await getAnkiVersionString(path as String);
+  final fileName = p.join(path as String, ankiVersion);
   final appDocDir = await getApplicationDocumentsDirectory();
-  final targetDbPath = p.join(appDocDir.path, "collection.anki2");
-  final sourceFile = File(filename);
+  final targetDbPath = p.join(appDocDir.path, ankiVersion);
+  final sourceFile = File(fileName);
   final targetFile = File(targetDbPath);
   if (await targetFile.exists()){
     await targetFile.delete();
@@ -51,4 +55,13 @@ Future<void> sqliteReader() async{
     }
   });
 
+}
+Future<String> getAnkiVersionString(String folderPath) async {
+  final fileAnki21 = File(p.join(folderPath, 'collection.anki21'));
+  final existsAnki21 = await fileAnki21.exists();
+  if (existsAnki21){
+    return "collection.anki21";
+  } else {
+    return "collection.anki2";
+  }
 }
