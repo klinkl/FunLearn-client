@@ -1,8 +1,10 @@
 
 import 'package:flutter/material.dart';
 
+import '../data/databaseHelper.dart';
+import '../data/models/deck.dart';
 import '../data/sqliteReader.dart';
-
+import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 class MyHomePage extends StatefulWidget {
   const MyHomePage({super.key, required this.title});
 
@@ -23,82 +25,58 @@ class MyHomePage extends StatefulWidget {
 
 class _MyHomePageState extends State<MyHomePage> {
   final int _counter = 0;
-
-  void addNewDeck() async{
+  List<Deck> decks = [];
+  Future<void> addNewDeck() async{
     await sqliteReader();
-    setState((){
+    await _loadDecks();
+    //setState((){
+    //});
+  }
+  @override
+  void initState() {
+    super.initState();
+    _loadDecks();
+  }
+  Future<void> _loadDecks() async {
+    sqfliteFfiInit();
+    databaseFactory = databaseFactoryFfi;
+    final dbHelper = DatabaseHelper();
+    final fetchedDecks = await dbHelper.getDecks();
+    print(fetchedDecks.length);
+    setState(() {
+      decks = fetchedDecks;
     });
   }
-
   @override
   Widget build(BuildContext context) {
-    // This method is rerun every time setState is called, for instance as done
-    // by the _incrementCounter method above.
-    //
-    // The Flutter framework has been optimized to make rerunning build methods
-    // fast, so that you can just rebuild anything that needs updating rather
-    // than having to individually change instances of widgets.
+    final width = MediaQuery.of(context).size.width;
+    final crossAxisCount = width > 1000 ? 3 : 2;
     return Scaffold(
       appBar: AppBar(
-        // TRY THIS: Try changing the color here to a specific color (to
-        // Colors.amber, perhaps?) and trigger a hot reload to see the AppBar
-        // change color while the other colors stay the same.
         backgroundColor: Theme.of(context).colorScheme.inversePrimary,
-        // Here we take the value from the MyHomePage object that was created by
-        // the App.build method, and use it to set our appbar title.
         title: Text(widget.title),
       ),
-      body: Center(
-        // Center is a layout widget. It takes a single child and positions it
-        // in the middle of the parent.
-        child: Column(
-          // Column is also a layout widget. It takes a list of children and
-          // arranges them vertically. By default, it sizes itself to fit its
-          // children horizontally, and tries to be as tall as its parent.
-          //
-          // Column has various properties to control how it sizes itself and
-          // how it positions its children. Here we use mainAxisAlignment to
-          // center the children vertically; the main axis here is the vertical
-          // axis because Columns are vertical (the cross axis would be
-          // horizontal).
-          //
-          // TRY THIS: Invoke "debug painting" (choose the "Toggle Debug Paint"
-          // action in the IDE, or press "p" in the console), to see the
-          // wireframe for each widget.
-          mainAxisAlignment: .center,
-          children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Card(child: _SampleCard(cardName: 'Card 1')),
-                SizedBox(width: 16),
-                Card(child: _SampleCard(cardName: 'Card 2')),
-              ],
-            ),
-            SizedBox(height: 16),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Card(child: _SampleCard(cardName: 'Card 3')),
-                SizedBox(width: 16),
-                Card(child: _SampleCard(cardName: 'Card 4')),
-              ],
-            ),
-            SizedBox(height: 16),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Card(child: _SampleCard(cardName: 'Card 5')),
-                SizedBox(width: 16),
-                Card(child: _SampleCard(cardName: 'Card 6')),
-              ],
-            ),
-          ],
-        ),
+      body: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 20),
+          child: GridView.builder(
+            itemCount: decks.length,
+              gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(crossAxisCount: crossAxisCount,
+                crossAxisSpacing: width/80,
+                mainAxisSpacing: width/80,
+                childAspectRatio: 2
+                
+              ), itemBuilder: (context, index) {
+            return Card(
+              child: _SampleCard(cardName: decks[index].name),
+            );
+          },)
       ), //maybe use the floatingActionButton as a button to add new Anki sets?
       floatingActionButton: FloatingActionButton(
-        onPressed: addNewDeck,
-        tooltip: 'Increment',
+        onPressed: () async {
+          await addNewDeck();
+          // .await _loadDecks();
+        },
+        tooltip: 'Add new deck',
         child: const Icon(Icons.add),
       ),
       bottomNavigationBar: BottomNavigationBar(
