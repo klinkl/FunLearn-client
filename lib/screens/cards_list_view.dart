@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../theme/customColors.dart';
+import '../widgets/navigationBar.dart';
 
 class MyHomePage extends StatefulWidget {
   const MyHomePage({
@@ -66,44 +67,9 @@ class _MyHomePageState extends State<MyHomePage> {
         tooltip: 'Increment',
         child: const Icon(Icons.add),
       ),
-      bottomNavigationBar: BottomNavigationBar(
-        backgroundColor: customColors.navigationBar,
-        selectedItemColor: cs.onPrimary,
-        // ignore: deprecated_member_use
-        unselectedItemColor: cs.onSurface.withOpacity(0.6),
+      bottomNavigationBar: CustomBottomNav(
         currentIndex: _selectedIndex,
         onTap: _onItemTapped,
-        type: BottomNavigationBarType.fixed,
-        items: [
-          BottomNavigationBarItem(
-            icon: Icon(
-              Icons.home,
-              color: _selectedIndex == 0 ? customColors.navigationIcon : null,
-            ),
-            label: 'Home',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(
-              Icons.checklist,
-              color: _selectedIndex == 1 ? customColors.navigationIcon : null,
-            ),
-            label: 'Quests',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(
-              Icons.leaderboard,
-              color: _selectedIndex == 2 ? customColors.navigationIcon : null,
-            ),
-            label: 'Leaderboard',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(
-              Icons.settings,
-              color: _selectedIndex == 3 ? customColors.navigationIcon : null,
-            ),
-            label: 'Settings',
-          ),
-        ],
       ),
     );
   }

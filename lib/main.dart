@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
+
 import 'screens/learning_view.dart';
 import 'screens/cards_list_view.dart';
+import 'screens/setting_view.dart';
+
 import '../theme/customColors.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -60,7 +63,7 @@ class _MyAppState extends State<MyApp> {
         useMaterial3: true,
         colorScheme: ColorScheme(
           brightness: Brightness.light,
-          primary: Colors.black,
+          primary: Colors.white,
           onPrimary: Colors.black,
           secondary: Colors.white,
           onSecondary: Colors.white,
@@ -107,7 +110,7 @@ class _MyAppState extends State<MyApp> {
         ],
       ),
       themeMode: _themeMode,
-      home: MyHomePage(
+      home: SettingView(
         themeMode: _themeMode,
         onThemeModeChanged: _setThemeMode,
       ),
