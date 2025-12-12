@@ -97,10 +97,6 @@ class _SettingViewState extends State<SettingView> {
           ],
         ),
       ),
-      bottomNavigationBar: CustomBottomNav(
-        currentIndex: _selectedIndex,
-        onTap: _onItemTapped,
-      ),
     );
   }
 }
