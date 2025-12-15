@@ -1,8 +1,13 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:funlearn_client/data/apkgImport/ankiDbWriter.dart';
 
+import '../data/apkgImport/ankiDbReader.dart';
+import '../data/apkgImport/apkgExtractor.dart';
+import '../data/apkgImport/apkgImportService.dart';
+import '../data/apkgImport/apkgSource.dart';
 import '../data/databaseHelper.dart';
 import '../data/models/deck.dart';
-import '../data/sqliteReader.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 import 'package:flutter_expandable_fab/flutter_expandable_fab.dart';
 
@@ -25,11 +30,17 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
-  final int _counter = 0;
+  final dbHelper = DatabaseHelper();
   List<Deck> decks = [];
+  late final ApkgImportService importService = ApkgImportService(
+    source: FilePickerApkgSource(),
+    extractor: ApkgExtractor(),
+    reader: AnkiDbReader(),
+    writer: AnkiDbWriter(dbHelper),
+  );
 
   Future<void> addNewDeck() async {
-    await sqliteReader();
+    await importService.importApkg();
     await _loadDecks();
     //setState((){
     //});
@@ -44,9 +55,10 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   Future<void> _loadDecks() async {
-    final dbHelper = DatabaseHelper();
     final fetchedDecks = await dbHelper.getDecks();
-    print(fetchedDecks.length);
+    if (kDebugMode) {
+      print(fetchedDecks.length);
+    }
     setState(() {
       decks = fetchedDecks;
     });
@@ -83,7 +95,7 @@ class _MyHomePageState extends State<MyHomePage> {
         distance: 70,
         childrenAnimation: ExpandableFabAnimation.none,
         overlayStyle: ExpandableFabOverlayStyle(
-          color: Colors.white.withOpacity(0.5),
+          color: Colors.white.withOpacity(0.9),
         ),
         children: [
           Row(
