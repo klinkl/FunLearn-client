@@ -1,10 +1,11 @@
-
 import 'package:flutter/material.dart';
 
 import '../data/databaseHelper.dart';
 import '../data/models/deck.dart';
 import '../data/sqliteReader.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
+import 'package:flutter_expandable_fab/flutter_expandable_fab.dart';
+
 class MyHomePage extends StatefulWidget {
   const MyHomePage({super.key, required this.title});
 
@@ -26,12 +27,14 @@ class MyHomePage extends StatefulWidget {
 class _MyHomePageState extends State<MyHomePage> {
   final int _counter = 0;
   List<Deck> decks = [];
-  Future<void> addNewDeck() async{
+
+  Future<void> addNewDeck() async {
     await sqliteReader();
     await _loadDecks();
     //setState((){
     //});
   }
+
   @override
   void initState() {
     super.initState();
@@ -39,6 +42,7 @@ class _MyHomePageState extends State<MyHomePage> {
     databaseFactory = databaseFactoryFfi;
     _loadDecks();
   }
+
   Future<void> _loadDecks() async {
     final dbHelper = DatabaseHelper();
     final fetchedDecks = await dbHelper.getDecks();
@@ -47,6 +51,7 @@ class _MyHomePageState extends State<MyHomePage> {
       decks = fetchedDecks;
     });
   }
+
   @override
   Widget build(BuildContext context) {
     final width = MediaQuery.of(context).size.width;
@@ -57,27 +62,55 @@ class _MyHomePageState extends State<MyHomePage> {
         title: Text(widget.title),
       ),
       body: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 20),
-          child: GridView.builder(
-            itemCount: decks.length,
-              gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(crossAxisCount: crossAxisCount,
-                crossAxisSpacing: width/80,
-                mainAxisSpacing: width/80,
-                childAspectRatio: 2
-                
-              ), itemBuilder: (context, index) {
-            return Card(
-              child: _SampleCard(cardName: decks[index].name),
-            );
-          },)
-      ), //maybe use the floatingActionButton as a button to add new Anki sets?
-      floatingActionButton: FloatingActionButton(
-        onPressed: () async {
-          await addNewDeck();
-          // .await _loadDecks();
-        },
-        tooltip: 'Add new deck',
-        child: const Icon(Icons.add),
+        padding: const EdgeInsets.symmetric(horizontal: 20),
+        child: GridView.builder(
+          itemCount: decks.length,
+          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+            crossAxisCount: crossAxisCount,
+            crossAxisSpacing: width / 80,
+            mainAxisSpacing: width / 80,
+            childAspectRatio: 2,
+          ),
+          itemBuilder: (context, index) {
+            return Card(child: _SampleCard(cardName: decks[index].name));
+          },
+        ),
+      ),
+      //maybe use the floatingActionButton as a button to add new Anki sets?
+      floatingActionButtonLocation: ExpandableFab.location,
+      floatingActionButton: ExpandableFab(
+        type: ExpandableFabType.up,
+        distance: 70,
+        childrenAnimation: ExpandableFabAnimation.none,
+        overlayStyle: ExpandableFabOverlayStyle(
+          color: Colors.white.withOpacity(0.5),
+        ),
+        children: [
+          Row(
+            children: [
+              Text('Import from .akpg'),
+              SizedBox(width: 20),
+              FloatingActionButton.small(
+                heroTag: null,
+                onPressed: () async {
+                  await addNewDeck();
+                },
+                child: const Icon(Icons.file_open),
+              ),
+            ],
+          ),
+          Row(
+            children: [
+              Text('Create new deck'),
+              SizedBox(width: 20),
+              FloatingActionButton.small(
+                heroTag: null,
+                child: const Icon(Icons.add),
+                onPressed: () {},
+              ),
+            ],
+          ),
+        ],
       ),
       bottomNavigationBar: BottomNavigationBar(
         backgroundColor: Colors.blueAccent,
@@ -103,6 +136,7 @@ class _MyHomePageState extends State<MyHomePage> {
 
 class _SampleCard extends StatelessWidget {
   final String cardName;
+
   const _SampleCard({required this.cardName});
 
   @override

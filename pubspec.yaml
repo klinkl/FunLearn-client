@@ -39,7 +39,7 @@ dependencies:
   archive: ^4.0.7
   path_provider: ^2.1.5
   path: ^1.9.1
-
+  flutter_expandable_fab: ^2.5.2
 dev_dependencies:
   sqflite_common_ffi:
   flutter_test:
