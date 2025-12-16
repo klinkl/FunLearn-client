@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import '../theme/customColors.dart';
-import '../widgets/navigationBar.dart';
+import '../widgets/user_info.dart';
 
 class MyHomePage extends StatefulWidget {
   const MyHomePage({
@@ -27,11 +27,23 @@ class _MyHomePageState extends State<MyHomePage> {
     final customColors = Theme.of(context).extension<CustomColors>()!;
 
     return Scaffold(
-      body: Center(
+      body: SafeArea(
         child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
+          crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            const SizedBox(height: 16),
+            const SizedBox(height: 32),
+
+            const Userinfo(
+              profilPicture: 'assets/images/default_pfp.png',
+              userName: 'Eliott',
+              exp: 125,
+              expNextLevel: 250,
+              level: 12,
+              streak: 7,
+            ),
+
+            const SizedBox(height: 24),
+
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: const [
@@ -64,7 +76,7 @@ class _MyHomePageState extends State<MyHomePage> {
       floatingActionButton: FloatingActionButton(
         onPressed: () => {},
         backgroundColor: customColors.addButton,
-        tooltip: 'Increment',
+        tooltip: 'Add',
         child: const Icon(Icons.add),
       ),
     );

@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import '../theme/customColors.dart';
-import '../widgets/navigationBar.dart';
 
 class SettingView extends StatefulWidget {
   const SettingView({
@@ -51,16 +50,37 @@ class _SettingViewState extends State<SettingView> {
       required String label,
       required VoidCallback onPressed,
     }) {
-      return ElevatedButton(
-        onPressed: onPressed,
-        style: adaptiveButtonStyle(active),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(icon, size: 30),
-            const SizedBox(height: 6),
-            Text(label, style: const TextStyle(fontSize: 14)),
-          ],
+      final screenWidth = MediaQuery.of(context).size.width;
+      final screenHeight = MediaQuery.of(context).size.height;
+
+      final buttonWidth = screenWidth * 0.2;
+      final buttonHeight = screenHeight * 0.1;
+      final iconSize = buttonHeight * 0.3;
+
+      return SizedBox(
+        width: buttonWidth,
+        height: buttonHeight,
+        child: ElevatedButton(
+          onPressed: onPressed,
+          style: adaptiveButtonStyle(active),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(icon, size: iconSize),
+              const SizedBox(height: 8),
+              FittedBox(
+                fit: BoxFit.scaleDown,
+                child: Text(
+                  label,
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontSize: buttonHeight * 0.2,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+            ],
+          ),
         ),
       );
     }

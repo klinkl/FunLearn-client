@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'learning_view.dart';
 import 'cards_list_view.dart';
 import 'setting_view.dart';
-import '../widgets/navigationBar.dart';
+import '../widgets/navigation_bar.dart';
 
 class HomeView extends StatefulWidget {
   final ThemeMode themeMode;

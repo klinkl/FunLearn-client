@@ -61,7 +61,7 @@ class _MyAppState extends State<MyApp> {
         useMaterial3: true,
         colorScheme: ColorScheme(
           brightness: Brightness.light,
-          primary: Colors.white,
+          primary: Colors.lightBlue,
           onPrimary: Colors.black,
           secondary: Colors.white,
           onSecondary: Colors.white,
@@ -75,7 +75,7 @@ class _MyAppState extends State<MyApp> {
         ),
         extensions: [
           const CustomColors(
-            card: Colors.white54,
+            card: Color.fromARGB(255, 204, 202, 202),
             navigationBar: Colors.lightBlue,
             navigationIcon: Colors.black,
             addButton: Colors.white,
