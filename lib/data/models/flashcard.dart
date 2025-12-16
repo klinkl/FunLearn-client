@@ -55,16 +55,26 @@ class Flashcard {
       back: map['back'] as String,
       state: State.values[map['state'] ?? State.learning.index],
       step: map['step'],
-      stability: (map['stability']).toDouble(),
-      difficulty: (map['difficulty']).toDouble(),
+      stability: (map['stability'])?.toDouble(),
+      difficulty: (map['difficulty'])?.toDouble(),
       due: DateTime.fromMillisecondsSinceEpoch(
         map['due'] ?? DateTime.now().millisecondsSinceEpoch,
         isUtc: true,
       ),
-      lastReview: DateTime.fromMillisecondsSinceEpoch(
-        map['lastReview'],
-        isUtc: true,
-      ),
+      lastReview: map['lastReview'] != null
+          ? DateTime.fromMillisecondsSinceEpoch(map['lastReview'], isUtc: true)
+          : null,
+    );
+  }
+  Card toFsrsCard(Flashcard card) {
+    return Card(
+      cardId: card.cardId ?? 0,
+      state: card.state,
+      step: card.step,
+      stability: card.stability,
+      difficulty: card.difficulty,
+      due: card.due,
+      lastReview: card.lastReview,
     );
   }
 }

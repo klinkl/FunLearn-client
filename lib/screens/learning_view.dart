@@ -1,34 +1,60 @@
 import 'package:flutter/material.dart';
+import 'package:fsrs/fsrs.dart' show Scheduler, Rating;
 import 'package:funlearn_client/data/models/deck.dart';
 import 'package:funlearn_client/data/models/flashcard.dart';
-class Flashcard {
-  final String front;
-  final String back;
 
-  Flashcard({required this.front, required this.back});
-}
+import '../data/LearningController.dart';
+import '../data/databaseHelper.dart';
 
 class MyFlashcardScreen extends StatelessWidget {
-  const MyFlashcardScreen({super.key});
+  const MyFlashcardScreen({super.key, required this.deck});
+
+  final Deck deck;
 
   @override
   Widget build(BuildContext context) {
-    Flashcard card = Flashcard(front: "2 + 2", back: "4");
-    return LearningView(flashcard: card);
+    return LearningView(deck: deck);
   }
 }
 
 class LearningView extends StatefulWidget {
-  final Flashcard flashcard;
+  final Deck deck;
 
-  const LearningView({super.key, required this.flashcard});
+  const LearningView({super.key, required this.deck});
 
   @override
   State<LearningView> createState() => _LearningViewState();
 }
 
 class _LearningViewState extends State<LearningView> {
+  Flashcard? _currentCard;
   bool _backShow = false;
+  bool _loading = true;
+  late final LearningController controller;
+
+  @override
+  void initState() {
+    controller = LearningController(DatabaseHelper());
+    super.initState();
+    _loadNextCard();
+  }
+
+  Future<void> _loadNextCard() async {
+    setState(() => _loading = true);
+    final nextCard = await controller.getNextCard(widget.deck.deckId!);
+    setState(() {
+      _currentCard = nextCard;
+      _backShow = false;
+      _loading = false;
+    });
+  }
+
+  Future<void> _reviewCard(Rating rating) async {
+    if (_currentCard != null) {
+      await controller.reviewCard(_currentCard!, rating);
+      await _loadNextCard();
+    }
+  }
 
   void _show() {
     setState(() {
@@ -38,6 +64,19 @@ class _LearningViewState extends State<LearningView> {
 
   @override
   Widget build(BuildContext context) {
+    if (_loading) {
+      return Scaffold(
+        appBar: AppBar(title: Text("Flashcard")),
+        body: Center(child: CircularProgressIndicator()),
+      );
+    }
+
+    if (_currentCard == null) {
+      return Scaffold(
+        appBar: AppBar(title: Text("Flashcard")),
+        body: Center(child: Text("No cards due!")),
+      );
+    }
     return Scaffold(
       appBar: AppBar(title: Text("Flashcard")),
 
@@ -57,7 +96,7 @@ class _LearningViewState extends State<LearningView> {
               Expanded(
                 child: Center(
                   child: Text(
-                    widget.flashcard.front,
+                    _currentCard!.front,
                     textAlign: TextAlign.center,
                     style: TextStyle(fontSize: 22),
                   ),
@@ -80,7 +119,7 @@ class _LearningViewState extends State<LearningView> {
                   maintainState: true,
                   child: Center(
                     child: Text(
-                      widget.flashcard.back,
+                      _currentCard!.back,
                       textAlign: TextAlign.center,
                       style: TextStyle(fontSize: 22),
                     ),
@@ -98,7 +137,7 @@ class _LearningViewState extends State<LearningView> {
                   child: SizedBox(
                     height: MediaQuery.of(context).size.height * 0.1,
                     child: TextButton(
-                      onPressed: _show,
+                      onPressed: () => _reviewCard(Rating.again),
                       style: TextButton.styleFrom(
                         backgroundColor: Colors.red,
                         foregroundColor: Colors.black,
@@ -114,7 +153,7 @@ class _LearningViewState extends State<LearningView> {
                   child: SizedBox(
                     height: MediaQuery.of(context).size.height * 0.1,
                     child: TextButton(
-                      onPressed: _show,
+                      onPressed: () => _reviewCard(Rating.hard),
                       style: TextButton.styleFrom(
                         backgroundColor: Colors.orange,
                         foregroundColor: Colors.black,
@@ -130,7 +169,7 @@ class _LearningViewState extends State<LearningView> {
                   child: SizedBox(
                     height: MediaQuery.of(context).size.height * 0.1,
                     child: TextButton(
-                      onPressed: _show,
+                      onPressed: () => _reviewCard(Rating.good),
                       style: TextButton.styleFrom(
                         backgroundColor: Colors.lightGreen,
                         foregroundColor: Colors.black,
@@ -146,7 +185,7 @@ class _LearningViewState extends State<LearningView> {
                   child: SizedBox(
                     height: MediaQuery.of(context).size.height * 0.1,
                     child: TextButton(
-                      onPressed: _show,
+                      onPressed: () => _reviewCard(Rating.easy),
                       style: TextButton.styleFrom(
                         backgroundColor: Colors.green,
                         foregroundColor: Colors.black,

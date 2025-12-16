@@ -91,7 +91,7 @@ class _MyHomePageState extends State<MyHomePage> {
               Navigator.push(
                 context,
                 MaterialPageRoute(
-                  builder: (_) => LearningView(flashcard: Flashcard(front: "2 + 2", back: "4"),)
+                  builder: (_) => LearningView(deck: decks[index])
                 ),
               );
                 }));

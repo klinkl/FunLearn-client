@@ -149,5 +149,19 @@ class DatabaseHelper {
 
     _database = await _initDatabase();
   }
+  Future<List<Flashcard>> fetchDueCards(int deckId) async {
+    final db = await database;
+    final now = DateTime.now().toUtc().millisecondsSinceEpoch;
+
+    final maps = await db.query(
+      'Card',
+      where: 'deckId = ? AND due <= ?',
+      whereArgs: [deckId, now],
+      orderBy: 'due ASC',
+    );
+
+    return maps.map((map) => Flashcard.fromMap(map)).toList();
+  }
+
 
 }
