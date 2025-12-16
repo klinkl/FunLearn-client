@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-
+import 'package:funlearn_client/data/models/deck.dart';
+import 'package:funlearn_client/data/models/flashcard.dart';
 class Flashcard {
   final String front;
   final String back;

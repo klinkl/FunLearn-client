@@ -5,7 +5,7 @@ import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 import 'package:sqflite/sqflite.dart';
 
 import 'package:funlearn_client/data/databaseHelper.dart';
-import 'package:funlearn_client/data/models/card.dart';
+import 'package:funlearn_client/data/models/flashcard.dart';
 import 'package:funlearn_client/data/models/deck.dart';
 import 'dart:io';
 import 'package:flutter/services.dart';
@@ -116,7 +116,7 @@ void main() {
   });
   test("ankiDbWriter correctly writes deck and cards to DB", () async {
     var deck = Deck(deckId: 1, name: "Test Deck A");
-    var card = Card(cardId: 1, deckId: 1, front: "Front", back: "Back");
+    var card = Flashcard(cardId: 1, deckId: 1, front: "Front", back: "Back");
     final writer = AnkiDbWriter(dbHelper);
     await writer.save(([deck], [card]));
     final List<Deck> decks = await dbHelper.getDecks();

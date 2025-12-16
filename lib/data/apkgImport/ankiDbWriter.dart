@@ -1,5 +1,5 @@
 import '../databaseHelper.dart';
-import '../models/card.dart';
+import '../models/flashcard.dart';
 import '../models/deck.dart';
 
 class AnkiDbWriter {
@@ -7,7 +7,7 @@ class AnkiDbWriter {
 
   AnkiDbWriter(this.helper);
 
-  Future<void> save((List<Deck> deckList, List<Card> cardList) tuple) async {
+  Future<void> save((List<Deck> deckList, List<Flashcard> cardList) tuple) async {
     final (deckList, cardList) = tuple;
     if (deckList.isNotEmpty){
       for (var deck in deckList){
@@ -16,7 +16,7 @@ class AnkiDbWriter {
         for (var card in cardList){
           if (card.deckId == deckId){
             await helper.insertCard(
-                Card(deckId: id, front: card.front, back: card.back)
+                Flashcard(deckId: id, front: card.front, back: card.back)
             );
           }
         }

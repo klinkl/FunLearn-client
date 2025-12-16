@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:funlearn_client/data/apkgImport/ankiDbWriter.dart';
+import 'package:funlearn_client/screens/learning_view.dart';
 
 import '../data/apkgImport/ankiDbReader.dart';
 import '../data/apkgImport/apkgExtractor.dart';
@@ -51,6 +52,7 @@ class _MyHomePageState extends State<MyHomePage> {
     super.initState();
     sqfliteFfiInit();
     databaseFactory = databaseFactoryFfi;
+    //dbHelper.resetDatabase();
     _loadDecks();
   }
 
@@ -84,7 +86,15 @@ class _MyHomePageState extends State<MyHomePage> {
             childAspectRatio: 2,
           ),
           itemBuilder: (context, index) {
-            return Card(child: _SampleCard(cardName: decks[index].name));
+            return Card(child: _SampleCard(cardName: decks[index].name,
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => LearningView(flashcard: Flashcard(front: "2 + 2", back: "4"),)
+                ),
+              );
+                }));
           },
         ),
       ),
@@ -148,15 +158,19 @@ class _MyHomePageState extends State<MyHomePage> {
 
 class _SampleCard extends StatelessWidget {
   final String cardName;
+  final VoidCallback? onTap;
 
-  const _SampleCard({required this.cardName});
+  const _SampleCard({required this.cardName, this.onTap,});
 
   @override
   Widget build(BuildContext context) {
-    return SizedBox(
-      width: 150,
-      height: 100,
-      child: Center(child: Text(cardName)),
+    return InkWell(
+      onTap: onTap,
+      child: SizedBox(
+          width: 150,
+          height: 100,
+          child: Center(
+              child: Text(cardName))),
     );
   }
 }

@@ -5,7 +5,7 @@ import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 import 'package:sqflite/sqflite.dart';
 
 import 'package:funlearn_client/data/databaseHelper.dart';
-import 'package:funlearn_client/data/models/card.dart';
+import 'package:funlearn_client/data/models/flashcard.dart';
 import 'package:funlearn_client/data/models/deck.dart';
 
 void main() {
@@ -79,7 +79,7 @@ void main() {
   group('Card tests', () {
     test('Insert Card', () async{
       await dbHelper.insertDeck(Deck(deckId: 1,name: "Test Deck A"));
-      await dbHelper.insertCard(Card(cardId: 1, deckId: 1, front: "Front", back: "Back"));
+      await dbHelper.insertCard(Flashcard(cardId: 1, deckId: 1, front: "Front", back: "Back"));
       final card = await dbHelper.getCard(1);
       expect(card?.back, "Back");
       expect(card?.front, "Front");
@@ -87,8 +87,8 @@ void main() {
     });
     test('Get Cards', () async{
       await dbHelper.insertDeck(Deck(deckId: 1,name: "Test Deck A"));
-      await dbHelper.insertCard(Card(cardId: 1, deckId: 1, front: "Front", back: "Back"));
-      await dbHelper.insertCard(Card(cardId: 2, deckId: 1, front: "Front2", back: "Back2"));
+      await dbHelper.insertCard(Flashcard(cardId: 1, deckId: 1, front: "Front", back: "Back"));
+      await dbHelper.insertCard(Flashcard(cardId: 2, deckId: 1, front: "Front2", back: "Back2"));
       final cards = await dbHelper.getCardsByDeck(1);
       expect(cards.length, 2);
       expect(cards.first.cardId, 1);
@@ -102,8 +102,8 @@ void main() {
     });
     test('Delete Card', () async{
       await dbHelper.insertDeck(Deck(deckId: 1,name: "Test Deck A"));
-      await dbHelper.insertCard(Card(cardId: 1, deckId: 1, front: "Front", back: "Back"));
-      await dbHelper.insertCard(Card(cardId: 2, deckId: 1, front: "Front2", back: "Back2"));
+      await dbHelper.insertCard(Flashcard(cardId: 1, deckId: 1, front: "Front", back: "Back"));
+      await dbHelper.insertCard(Flashcard(cardId: 2, deckId: 1, front: "Front2", back: "Back2"));
       await dbHelper.deleteCard(1);
       final cards = await dbHelper.getCardsByDeck(1);
       expect(cards.length, 1);
@@ -111,16 +111,16 @@ void main() {
     });
     test('Update Card', ()async{
       await dbHelper.insertDeck(Deck(deckId: 1,name: "Test Deck A"));
-      await dbHelper.insertCard(Card(cardId: 1, deckId: 1, front: "Front", back: "Back"));
-      await dbHelper.updateCard(Card(cardId: 1, deckId: 1, front: "New", back: "New"));
+      await dbHelper.insertCard(Flashcard(cardId: 1, deckId: 1, front: "Front", back: "Back"));
+      await dbHelper.updateCard(Flashcard(cardId: 1, deckId: 1, front: "New", back: "New"));
       final card = await dbHelper.getCard(1);
       expect(card?.back, "New");
       expect(card?.front, "New");
     });
     test('Cascading card deletion on deck deletion', () async{
       final deckId = await dbHelper.insertDeck(Deck(deckId: 1,name: "Test Deck A"));
-      await dbHelper.insertCard(Card(cardId: 1, deckId: 1, front: "Front", back: "Back"));
-      await dbHelper.insertCard(Card(cardId: 2, deckId: 1, front: "Front2", back: "Back2"));
+      await dbHelper.insertCard(Flashcard(cardId: 1, deckId: 1, front: "Front", back: "Back"));
+      await dbHelper.insertCard(Flashcard(cardId: 2, deckId: 1, front: "Front2", back: "Back2"));
       await dbHelper.deleteDeck(deckId);
       final deletedDeck = await dbHelper.getDeck(deckId);
       expect(deletedDeck, isNull);
@@ -129,7 +129,7 @@ void main() {
     });
     test('Insert card with invalid deckId', () async {
       try {
-        await dbHelper.insertCard(Card(deckId: 999, front: "Invalid", back: "Invalid"));
+        await dbHelper.insertCard(Flashcard(deckId: 999, front: "Invalid", back: "Invalid"));
         fail('Inserting a card with a non-existent deckId should throw an exception');
       } catch (e) {
         expect(e, isA<DatabaseException>());

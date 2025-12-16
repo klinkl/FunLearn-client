@@ -4,7 +4,7 @@ import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart' hide Card;
 import 'package:funlearn_client/data/models/deck.dart';
-import 'package:funlearn_client/data/models/card.dart';
+import 'package:funlearn_client/data/models/flashcard.dart';
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 import 'package:sqflite/sqflite.dart';
@@ -12,7 +12,7 @@ import 'package:sqflite/sqflite.dart';
 import '../databaseHelper.dart';
 
 class AnkiDbReader {
-  Future<(List<Deck>, List<Card>)> read(String folderPath) async {
+  Future<(List<Deck>, List<Flashcard>)> read(String folderPath) async {
     final dbFileName = await getAnkiVersionString(folderPath);
     final appDir = await getApplicationDocumentsDirectory();
 
@@ -30,7 +30,7 @@ class AnkiDbReader {
     List<Map<String, Object?>> result = [];
     String deckName = "";
     List<Deck> deckList = [];
-    List<Card> cardList = [];
+    List<Flashcard> cardList = [];
     for (final entry in deck.entries) {
       final deckId = int.parse(entry.key);
       deckName = entry.value["name"];
@@ -51,7 +51,7 @@ class AnkiDbReader {
       deckList.add(Deck(deckId: deckId, name: deckName));
       if (result.isNotEmpty){
         for (var row in result) {
-          cardList.add(Card(deckId: deckId,front: row["sfld"] as String, back: row["flds"] as String));
+          cardList.add(Flashcard(deckId: deckId,front: row["sfld"] as String, back: row["flds"] as String));
         }
       }
 

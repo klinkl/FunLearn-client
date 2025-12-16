@@ -10,7 +10,7 @@ import 'package:funlearn_client/data/apkgImport/ankiDbWriter.dart' as _i8;
 import 'package:funlearn_client/data/apkgImport/apkgExtractor.dart' as _i9;
 import 'package:funlearn_client/data/apkgImport/apkgSource.dart' as _i3;
 import 'package:funlearn_client/data/databaseHelper.dart' as _i2;
-import 'package:funlearn_client/data/models/card.dart' as _i7;
+import 'package:funlearn_client/data/models/flashcard.dart' as _i7;
 import 'package:funlearn_client/data/models/deck.dart' as _i6;
 import 'package:mockito/mockito.dart' as _i1;
 import 'package:mockito/src/dummies.dart' as _i10;
@@ -62,15 +62,15 @@ class MockAnkiDbReader extends _i1.Mock implements _i5.AnkiDbReader {
   }
 
   @override
-  _i4.Future<(List<_i6.Deck>, List<_i7.Card>)> read(String? folderPath) =>
+  _i4.Future<(List<_i6.Deck>, List<_i7.Flashcard>)> read(String? folderPath) =>
       (super.noSuchMethod(
             Invocation.method(#read, [folderPath]),
-            returnValue: _i4.Future<(List<_i6.Deck>, List<_i7.Card>)>.value((
+            returnValue: _i4.Future<(List<_i6.Deck>, List<_i7.Flashcard>)>.value((
               <_i6.Deck>[],
-              <_i7.Card>[],
+              <_i7.Flashcard>[],
             )),
           )
-          as _i4.Future<(List<_i6.Deck>, List<_i7.Card>)>);
+          as _i4.Future<(List<_i6.Deck>, List<_i7.Flashcard>)>);
 }
 
 /// A class which mocks [AnkiDbWriter].
@@ -93,7 +93,7 @@ class MockAnkiDbWriter extends _i1.Mock implements _i8.AnkiDbWriter {
           as _i2.DatabaseHelper);
 
   @override
-  _i4.Future<void> save((List<_i6.Deck>, List<_i7.Card>)? tuple) =>
+  _i4.Future<void> save((List<_i6.Deck>, List<_i7.Flashcard>)? tuple) =>
       (super.noSuchMethod(
             Invocation.method(#save, [tuple]),
             returnValue: _i4.Future<void>.value(),
