@@ -33,7 +33,8 @@ void main() {
     await resetDatabase(dbHelper);
   });
   tearDown(() async {
-    await resetDatabase(dbHelper);
+    await dbHelper.resetDatabase();
+    await dbHelper.closeDatabase();
   });
   test('getAnkiVersionString returns correct version', () async {
     final tempDir = Directory.systemTemp.createTempSync();

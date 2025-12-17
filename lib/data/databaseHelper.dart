@@ -166,6 +166,11 @@ class DatabaseHelper {
 
     return maps.map((map) => Flashcard.fromMap(map)).toList();
   }
-
+  Future<void> closeDatabase() async{
+    if (_database != null) {
+      await _database!.close();
+      _database = null;
+    }
+  }
 
 }

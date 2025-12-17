@@ -22,6 +22,7 @@ void main() {
   });
   tearDown(() async {
     await resetDatabase(dbHelper);
+    await dbHelper.closeDatabase();
   });
   test('updates card in database after review', () async {
     final deck = Deck(deckId: 1,name: "name");

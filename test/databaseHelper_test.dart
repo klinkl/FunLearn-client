@@ -17,14 +17,12 @@ void main() {
 
   setUp(() async {
     dbHelper = DatabaseHelper(dbPath: 'testDatabase.db');
-    final db = await dbHelper.database;
-    await db.delete('Card');
-    await db.delete('Deck');
-    //for auto-increment
-    await db.execute("DELETE FROM sqlite_sequence WHERE name='Deck'");
-    await db.execute("DELETE FROM sqlite_sequence WHERE name='Card'");
+    await dbHelper.resetDatabase();
   });
-
+tearDown(() async{
+  await dbHelper.resetDatabase();
+  await dbHelper.closeDatabase();
+});
 
   group('Deck tests', () {
     test('Insert deck', () async {
