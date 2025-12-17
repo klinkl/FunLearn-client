@@ -16,9 +16,9 @@ void main() {
   late DatabaseHelper dbHelper;
   late LearningController controller;
   setUp(() async {
-    dbHelper = DatabaseHelper();
+    dbHelper = DatabaseHelper(dbPath: 'testDatabase.db');
     await resetDatabase(dbHelper);
-    controller = LearningController(DatabaseHelper());
+    controller = LearningController(DatabaseHelper(dbPath: 'testDatabase.db'));
   });
   tearDown(() async {
     await resetDatabase(dbHelper);

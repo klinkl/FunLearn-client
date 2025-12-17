@@ -6,12 +6,16 @@ import 'package:sqflite/sqflite.dart' as databaseFactoryFfi;
 import 'models/flashcard.dart';
 
 class DatabaseHelper {
-  static final DatabaseHelper _instance = DatabaseHelper._internal();
-  factory DatabaseHelper() => _instance;
-  DatabaseHelper._internal();
+  static DatabaseHelper? _instance;
+  final String dbPath;
+  DatabaseHelper._internal(this.dbPath);
 
   static Database? _database;
 
+  factory DatabaseHelper({required String dbPath}) {
+    _instance ??= DatabaseHelper._internal(dbPath);
+    return _instance!;
+  }
   Future<Database> get database async {
     if (_database != null) return _database!;
     _database = await _initDatabase();
@@ -19,8 +23,8 @@ class DatabaseHelper {
   }
 
   Future<Database> _initDatabase() async {
-    final dbPath = await getDatabasesPath();
-    final path = join(dbPath, 'database.db');
+    final dbFolder = await getDatabasesPath();
+    final path = join(dbFolder, dbPath);
 
     return await openDatabase(
       path,
@@ -59,25 +63,25 @@ class DatabaseHelper {
 
   }
   Future<int> deleteCard(int cardId) async{
-    final db = await _instance.database;
+    final db = await _instance!.database;
     return await db.delete('Card',
         where: 'cardId = ?',
         whereArgs: [cardId]);
   }
   Future<int> updateCard(Flashcard card) async{
-    final db = await _instance.database;
+    final db = await _instance!.database;
     return await db.update('Card',
         card.toMap(),
         where: 'cardId = ?',
         whereArgs: [card.cardId]);
   }
   Future<int> insertCard(Flashcard card) async {
-    final db = await _instance.database;
+    final db = await _instance!.database;
     return await db.insert('Card', card.toMap());
   }
 
   Future<List<Flashcard>> getCardsByDeck(int deckId) async {
-    final db = await _instance.database;
+    final db = await _instance!.database;
     final maps = await db.query(
       'Card',
       where: 'deckId = ?',
@@ -90,17 +94,17 @@ class DatabaseHelper {
   }
 
   Future<int> insertDeck(Deck deck) async {
-    final db = await _instance.database;
+    final db = await _instance!.database;
     return await db.insert('Deck', deck.toMap());
   }
 
   Future<List<Deck>> getDecks() async {
-    final db = await _instance.database;
+    final db = await _instance!.database;
     final maps = await db.query('Deck');
     return maps.map((map) => Deck.fromMap(map)).toList();
   }
   Future<Deck?> getDeck(int deckId) async {
-    final db = await _instance.database;
+    final db = await _instance!.database;
     final deck = await db.query('Deck',
         where: 'deckId = ?',
         whereArgs: [deckId]);
@@ -112,7 +116,7 @@ class DatabaseHelper {
     }
   }
   Future<Flashcard?> getCard(int cardId) async {
-    final db = await _instance.database;
+    final db = await _instance!.database;
     final card = await db.query('Card',
         where: 'cardId = ?',
         whereArgs: [cardId]);
@@ -124,21 +128,21 @@ class DatabaseHelper {
     }
   }
   Future<int> deleteDeck(int deckId) async{
-    final db = await _instance.database;
+    final db = await _instance!.database;
     return await db.delete('Deck',
         where: 'deckId = ?',
         whereArgs: [deckId]);
   }
   Future<int> updateDeck(Deck deck) async{
-    final db = await _instance.database;
+    final db = await _instance!.database;
     return await db.update('Deck',
         deck.toMap(),
         where: 'deckId = ?',
         whereArgs: [deck.deckId]);
   }
   Future<void> resetDatabase() async {
-    final dbPath = await getDatabasesPath();
-    final path = join(dbPath, 'database.db');
+    final dbFolder = await getDatabasesPath();
+    final path = join(dbFolder, dbPath);
 
     if (_database != null) {
       await _database!.close();

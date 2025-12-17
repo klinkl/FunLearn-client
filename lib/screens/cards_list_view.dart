@@ -31,7 +31,7 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
-  final dbHelper = DatabaseHelper();
+  final dbHelper = DatabaseHelper(dbPath: 'database.db');
   List<Deck> decks = [];
   late final ApkgImportService importService = ApkgImportService(
     source: FilePickerApkgSource(),

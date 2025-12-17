@@ -29,7 +29,7 @@ void main() {
   late DatabaseHelper dbHelper;
 
   setUp(() async {
-    dbHelper = DatabaseHelper();
+    dbHelper = DatabaseHelper(dbPath: 'testDatabase.db');
     await resetDatabase(dbHelper);
   });
   tearDown(() async {

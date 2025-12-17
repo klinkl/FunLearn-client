@@ -16,7 +16,7 @@ void main() {
   late DatabaseHelper dbHelper;
 
   setUp(() async {
-    dbHelper = DatabaseHelper();
+    dbHelper = DatabaseHelper(dbPath: 'testDatabase.db');
     final db = await dbHelper.database;
     await db.delete('Card');
     await db.delete('Deck');

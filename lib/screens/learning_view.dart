@@ -34,7 +34,7 @@ class _LearningViewState extends State<LearningView> {
 
   @override
   void initState() {
-    controller = LearningController(DatabaseHelper());
+    controller = LearningController(DatabaseHelper(dbPath: 'database.db'));
     super.initState();
     _loadNextCard();
   }
