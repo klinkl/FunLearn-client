@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'learning_view.dart';
 import 'cards_list_view.dart';
+import 'quest_view.dart';
 import 'setting_view.dart';
 import '../widgets/navigation_bar.dart';
 
@@ -31,7 +32,7 @@ class _HomeViewState extends State<HomeView> {
         themeMode: widget.themeMode,
         onThemeModeChanged: widget.onThemeModeChanged,
       ),
-      MyHomePage(
+      QuestView(
         themeMode: widget.themeMode,
         onThemeModeChanged: widget.onThemeModeChanged,
       ),

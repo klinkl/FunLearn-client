@@ -61,6 +61,12 @@ flutter:
   assets:
     - assets/images/default_pfp.png
     - assets/images/streak.png
+    - assets/images/close1.png
+    - assets/images/close2.png
+    - assets/images/close3.png
+    - assets/images/open1.png
+    - assets/images/open2.png
+    - assets/images/open3.png
   # To add assets to your application, add an assets section, like this:
   # assets:
   #   - images/a_dot_burr.jpeg
