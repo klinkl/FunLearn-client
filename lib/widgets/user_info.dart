@@ -49,14 +49,18 @@ class Userinfo extends StatelessWidget {
           Stack(
             children: [
               Image.asset('assets/images/streak.png', width: 50, height: 50),
-              Positioned(
-                top: 27,
-                left: 21,
-                child: Text(
-                  '$streak',
-                  style: TextStyle(
-                    color: cs.onSecondary,
-                    fontWeight: FontWeight.bold,
+              Positioned.fill(
+                child: FractionalTranslation(
+                  translation: const Offset(0, 0.25),
+                  child: Center(
+                    child: Text(
+                      '$streak',
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.bold,
+                        color: cs.onSecondary,
+                      ),
+                    ),
                   ),
                 ),
               ),
