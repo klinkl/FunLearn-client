@@ -29,7 +29,7 @@ class _HomeViewState extends State<HomeView> {
   void initState() {
     super.initState();
     _screens = [
-      MyHomePage(
+      CardsListView(
         themeMode: widget.themeMode,
         onThemeModeChanged: widget.onThemeModeChanged,
       ),

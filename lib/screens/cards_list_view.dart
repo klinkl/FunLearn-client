@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
 import '../theme/customColors.dart';
 import '../widgets/user_info.dart';
+import '../widgets/sample_card.dart';
 
-class MyHomePage extends StatefulWidget {
-  const MyHomePage({
+class CardsListView extends StatefulWidget {
+  const CardsListView({
     super.key,
     required this.themeMode,
     required this.onThemeModeChanged,
@@ -13,10 +14,10 @@ class MyHomePage extends StatefulWidget {
   final ValueChanged<ThemeMode> onThemeModeChanged;
 
   @override
-  State<MyHomePage> createState() => _MyHomePageState();
+  State<CardsListView> createState() => _CardsListViewState();
 }
 
-class _MyHomePageState extends State<MyHomePage> {
+class _CardsListViewState extends State<CardsListView> {
   int _selectedIndex = 0;
 
   void _onItemTapped(int index) => setState(() => _selectedIndex = index);
@@ -47,27 +48,27 @@ class _MyHomePageState extends State<MyHomePage> {
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: const [
-                Card(child: _SampleCard(cardName: 'Card 1')),
+                Card(child: SampleCard(cardName: 'addition')),
                 SizedBox(width: 16),
-                Card(child: _SampleCard(cardName: 'Card 2')),
+                Card(child: SampleCard(cardName: 'addition')),
               ],
             ),
             const SizedBox(height: 16),
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: const [
-                Card(child: _SampleCard(cardName: 'Card 3')),
+                Card(child: SampleCard(cardName: 'addition')),
                 SizedBox(width: 16),
-                Card(child: _SampleCard(cardName: 'Card 4')),
+                Card(child: SampleCard(cardName: 'english-french')),
               ],
             ),
             const SizedBox(height: 16),
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: const [
-                Card(child: _SampleCard(cardName: 'Card 5')),
+                Card(child: SampleCard(cardName: 'english-french')),
                 SizedBox(width: 16),
-                Card(child: _SampleCard(cardName: 'Card 6')),
+                Card(child: SampleCard(cardName: 'english-french')),
               ],
             ),
           ],
@@ -78,27 +79,6 @@ class _MyHomePageState extends State<MyHomePage> {
         backgroundColor: customColors.addButton,
         tooltip: 'Add',
         child: const Icon(Icons.add),
-      ),
-    );
-  }
-}
-
-class _SampleCard extends StatelessWidget {
-  final String cardName;
-  const _SampleCard({required this.cardName, super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
-    final customColors = Theme.of(context).extension<CustomColors>()!;
-    return SizedBox(
-      width: 150,
-      height: 100,
-      child: Card(
-        color: customColors.card,
-        child: Center(
-          child: Text(cardName, style: TextStyle(color: cs.onSurface)),
-        ),
       ),
     );
   }

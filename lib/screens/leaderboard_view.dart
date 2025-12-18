@@ -35,9 +35,21 @@ class _LeaderBoardState extends State<LeaderboardView> {
         child: ListView(
           children: [
             if (_world)
-              ListTile(title: Text('World Leaderboard'))
+              ListTile(
+                title: Text(
+                  'World Leaderboard',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+                ),
+              )
             else
-              ListTile(title: Text('Friend Leaderboard')),
+              ListTile(
+                title: Text(
+                  'Friend Leaderboard',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+                ),
+              ),
             ListTile(
               title: Userinfo(
                 profilPicture: 'assets/images/default_pfp.png',
