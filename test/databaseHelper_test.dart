@@ -14,9 +14,9 @@ void main() {
   databaseFactory = databaseFactoryFfi;
 
   late DatabaseHelper dbHelper;
-
+  final path = 'databaseHelper_test.db';
   setUp(() async {
-    dbHelper = DatabaseHelper(dbPath: 'testDatabase.db');
+    dbHelper = DatabaseHelper(dbPath: path);
     await dbHelper.resetDatabase();
   });
 tearDown(() async{

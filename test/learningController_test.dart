@@ -15,13 +15,14 @@ void main() {
 
   late DatabaseHelper dbHelper;
   late LearningController controller;
+  final path = 'learningController_test.db';
   setUp(() async {
-    dbHelper = DatabaseHelper(dbPath: 'testDatabase.db');
-    await resetDatabase(dbHelper);
-    controller = LearningController(DatabaseHelper(dbPath: 'testDatabase.db'));
+    dbHelper = DatabaseHelper(dbPath: path);
+    await dbHelper.resetDatabase();
+    controller = LearningController(DatabaseHelper(dbPath: path));
   });
   tearDown(() async {
-    await resetDatabase(dbHelper);
+    await dbHelper.resetDatabase();
     await dbHelper.closeDatabase();
   });
   test('updates card in database after review', () async {

@@ -27,10 +27,10 @@ void main() {
   databaseFactory = databaseFactoryFfi;
 
   late DatabaseHelper dbHelper;
-
+  final path = 'apkgImport_test.db';
   setUp(() async {
-    dbHelper = DatabaseHelper(dbPath: 'testDatabase.db');
-    await resetDatabase(dbHelper);
+    dbHelper = DatabaseHelper(dbPath: path);
+    await dbHelper.resetDatabase();
   });
   tearDown(() async {
     await dbHelper.resetDatabase();
@@ -131,11 +131,3 @@ void main() {
   });
 }
 
-Future<void> resetDatabase(DatabaseHelper dbHelper) async {
-  final db = await dbHelper.database;
-  await db.delete('Card');
-  await db.delete('Deck');
-  // Reset auto-increment counters
-  await db.execute("DELETE FROM sqlite_sequence WHERE name='Deck'");
-  await db.execute("DELETE FROM sqlite_sequence WHERE name='Card'");
-}
