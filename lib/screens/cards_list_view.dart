@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../theme/customColors.dart';
+import './card_creation_view.dart';
 import '../widgets/user_info.dart';
 import '../widgets/sample_card.dart';
 
@@ -75,7 +76,12 @@ class _CardsListViewState extends State<CardsListView> {
         ),
       ),
       floatingActionButton: FloatingActionButton(
-        onPressed: () => {},
+        onPressed: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (_) => FlashcardCreatorView()),
+          );
+        },
         backgroundColor: customColors.addButton,
         tooltip: 'Add',
         child: const Icon(Icons.add),
