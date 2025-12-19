@@ -5,10 +5,10 @@ import 'package:funlearn_client/data/models/deck.dart';
 
 class LearningController {
   final DatabaseHelper helper;
-  final scheduler = Scheduler( learningSteps: [
-    Duration(minutes: 0),
-    Duration(minutes: 10),
-  ],);
+  final scheduler = Scheduler(
+    learningSteps: [Duration(milliseconds: 0), Duration(milliseconds: 0)],
+    relearningSteps: [Duration(milliseconds: 0)],
+    );
 
   LearningController(this.helper);
 

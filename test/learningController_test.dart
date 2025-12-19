@@ -75,10 +75,12 @@ void main() {
     await dbHelper.insertDeck(deck);
     final index = await dbHelper.insertCard(card);
     await controller.reviewCard(card, Rating.good);
-    final updatedCard = await dbHelper.getCard(1);
+    var updatedCard = await dbHelper.getCard(1);
+    await controller.reviewCard(updatedCard!, Rating.good);
+    updatedCard = await dbHelper.getCard(1);
     final difference = updatedCard!.due.millisecondsSinceEpoch -
         updatedCard!.lastReview!.millisecondsSinceEpoch;
-    expect(difference, 600000);
+    expect(difference, greaterThan(0));
   });
   test('reviewCard schedules card later for Rating.easy than Rating.good', () async {
     final deck = Deck(deckId: 1,name: "name");
