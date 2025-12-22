@@ -7,12 +7,12 @@ class Flashcard {
   int deckId;
   String front;
   String back;
-
+  bool isNew;
   State state;
   int? step;
   double? stability;
   double? difficulty;
-  DateTime due;
+  DateTime? due;
   DateTime? lastReview;
 
   Flashcard({
@@ -20,13 +20,15 @@ class Flashcard {
     required this.deckId,
     required this.front,
     required this.back,
-    DateTime? due,
+    this.due,
     this.state = State.learning,
     this.step,
     this.stability,
     this.difficulty,
     this.lastReview,
-  }) : due = due ?? DateTime.now().toUtc() {
+    bool? isNew,
+  }) : isNew = isNew ?? true
+  {
     if (state == State.learning && step == null) {
       step = 0;
     }
@@ -42,8 +44,9 @@ class Flashcard {
       'step': step,
       'stability': stability,
       'difficulty': difficulty,
-      'due': due.millisecondsSinceEpoch,
+      'due': due?.millisecondsSinceEpoch,
       'lastReview': lastReview?.millisecondsSinceEpoch,
+      'isNew': isNew ? 1 : 0,
     };
   }
 
@@ -64,6 +67,7 @@ class Flashcard {
       lastReview: map['lastReview'] != null
           ? DateTime.fromMillisecondsSinceEpoch(map['lastReview'], isUtc: true)
           : null,
+      isNew: map['isNew'] == 0 ? false : true
     );
   }
   Card toFsrsCard(Flashcard card) {

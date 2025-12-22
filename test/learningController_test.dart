@@ -36,7 +36,7 @@ void main() {
   });
   test('returns first card when due cards exist', () async {
     final deck = Deck(deckId: 1,name: "name");
-    final card = Flashcard(cardId: 1, deckId: 1, front: "Test", back: "Apple");
+    final card = Flashcard(cardId: 1, deckId: 1, front: "Test", back: "Apple", due: DateTime.now());
     await dbHelper.insertDeck(deck);
     final index = await dbHelper.insertCard(card);
     final nextCard = await controller.getNextCard(1);
@@ -51,8 +51,8 @@ void main() {
   });
   test('returns earliest due card when multiple cards are due', () async {
     final deck = Deck(deckId: 1,name: "name");
-    final card = Flashcard(cardId: 1, deckId: 1, front: "Test", back: "Apple");
-    final card2 = Flashcard(cardId: 2, deckId: 1, front: "Pear", back: "Test");
+    final card = Flashcard(cardId: 1, deckId: 1, front: "Test", back: "Apple", due: DateTime.now());
+    final card2 = Flashcard(cardId: 2, deckId: 1, front: "Pear", back: "Test", due: DateTime.now());
     await dbHelper.insertDeck(deck);
     await dbHelper.insertCard(card);
     await dbHelper.insertCard(card2);
@@ -78,7 +78,7 @@ void main() {
     var updatedCard = await dbHelper.getCard(1);
     await controller.reviewCard(updatedCard!, Rating.good);
     updatedCard = await dbHelper.getCard(1);
-    final difference = updatedCard!.due.millisecondsSinceEpoch -
+    final difference = updatedCard!.due!.millisecondsSinceEpoch -
         updatedCard!.lastReview!.millisecondsSinceEpoch;
     expect(difference, greaterThan(0));
   });
@@ -93,6 +93,6 @@ void main() {
     await controller.reviewCard(card, Rating.good);
     final updatedCard = await dbHelper.getCard(1);
     final updatedCard2 = await dbHelper.getCard(2);
-    expect(updatedCard2?.due.millisecondsSinceEpoch, lessThan(updatedCard!.due.millisecondsSinceEpoch));
+    expect(updatedCard2?.due?.millisecondsSinceEpoch, lessThan(updatedCard!.due!.millisecondsSinceEpoch));
   });
 }

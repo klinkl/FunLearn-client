@@ -31,12 +31,18 @@ class _LearningViewState extends State<LearningView> {
   bool _backShow = false;
   bool _loading = true;
   late final LearningController controller;
+  late final Future<void> _initFuture;
 
   @override
   void initState() {
     controller = LearningController(DatabaseHelper(dbPath: 'database.db'));
     super.initState();
-    _loadNextCard();
+    _initDailySession();
+  }
+
+  Future<void> _initDailySession() async {
+    await controller.runDailyNewCardRelease(widget.deck.deckId!);
+    await _loadNextCard();
   }
 
   Future<void> _loadNextCard() async {
@@ -73,8 +79,26 @@ class _LearningViewState extends State<LearningView> {
 
     if (_currentCard == null) {
       return Scaffold(
-        appBar: AppBar(title: Text("Flashcard")),
-        body: Center(child: Text("No cards due!")),
+        appBar: AppBar(title: const Text("Flashcard")),
+        body: Center(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Text("No cards due!", style: TextStyle(fontSize: 18)),
+              const SizedBox(height: 16),
+              ElevatedButton(
+                onPressed: () async {
+                  await controller.scheduleNewCardsOnDemand(
+                    widget.deck.deckId!,
+                    5,
+                  );
+                  await _loadNextCard();
+                },
+                child: const Text("Release more new cards"),
+              ),
+            ],
+          ),
+        ),
       );
     }
     return Scaffold(

@@ -40,7 +40,9 @@ class DatabaseHelper {
     await db.execute('''
       CREATE TABLE Deck(
         deckId INTEGER PRIMARY KEY AUTOINCREMENT,
-        name TEXT NOT NULL
+        name TEXT NOT NULL,
+        maxNewCards INTEGER,
+        lastNewCardsRelease INTEGER
       )
     ''');
 
@@ -57,6 +59,7 @@ class DatabaseHelper {
     difficulty REAL,     
     due INTEGER,                   
     lastReview INTEGER,  
+    isNew INTEGER CHECK (isNew IN (0,1)),
     FOREIGN KEY(deckId) REFERENCES Deck(deckId) ON DELETE CASCADE
   )
 ''');
@@ -85,6 +88,18 @@ class DatabaseHelper {
     final maps = await db.query(
       'Card',
       where: 'deckId = ?',
+      whereArgs: [deckId],
+    );
+    return List.generate(
+      maps.length,
+          (i) => Flashcard.fromMap(maps[i]),
+    );
+  }
+  Future<List<Flashcard>> getNewCardsByDeck(int deckId) async {
+    final db = await _instance!.database;
+    final maps = await db.query(
+      'Card',
+      where: 'deckId = ? AND isNew = 1',
       whereArgs: [deckId],
     );
     return List.generate(
