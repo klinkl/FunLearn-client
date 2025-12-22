@@ -19,17 +19,17 @@ void main() {
     dbHelper = DatabaseHelper(dbPath: path);
     await dbHelper.resetDatabase();
   });
-tearDown(() async{
-  await dbHelper.resetDatabase();
-  await dbHelper.closeDatabase();
-});
+  tearDown(() async {
+    await dbHelper.resetDatabase();
+    await dbHelper.closeDatabase();
+  });
 
   group('Deck tests', () {
     test('Insert deck', () async {
       final id = await dbHelper.insertDeck(Deck(name: "Test Deck"));
       expect(id, isNonZero);
     });
-    test('Get decks', () async{
+    test('Get decks', () async {
       await dbHelper.insertDeck(Deck(name: "Test Deck A"));
       await dbHelper.insertDeck(Deck(name: "Test Deck B"));
       final List<Deck> decks = await dbHelper.getDecks();
@@ -37,7 +37,7 @@ tearDown(() async{
       expect(decks.first.name, "Test Deck A");
       expect(decks.last.name, "Test Deck B");
     });
-    test('Get deck', () async{
+    test('Get deck', () async {
       await dbHelper.insertDeck(Deck(name: "Test Deck A"));
       await dbHelper.insertDeck(Deck(name: "Test Deck B"));
       final deck = await dbHelper.getDeck(1);
@@ -50,7 +50,7 @@ tearDown(() async{
       expect(decks.length, 1);
       expect(decks.first.name, "Test Deck B");
     });
-    test('Delete deck', () async{
+    test('Delete deck', () async {
       await dbHelper.insertDeck(Deck(name: "Test Deck A"));
       await dbHelper.insertDeck(Deck(name: "Test Deck B"));
       await dbHelper.deleteDeck(1);
@@ -59,15 +59,17 @@ tearDown(() async{
       expect(decks.first.name, "Test Deck B");
       expect(decks.first.deckId, 2);
     });
-    test('Get non-existent deck', () async{
+    test('Get non-existent deck', () async {
       final deck = await dbHelper.getDeck(999);
       expect(deck, null);
     });
-    test('Inserting decks with same deckId', () async{
+    test('Inserting decks with same deckId', () async {
       await dbHelper.insertDeck(Deck(deckId: 1, name: "Test Deck A"));
       try {
         await dbHelper.insertDeck(Deck(deckId: 1, name: "Test Deck B"));
-        fail('Inserting a deck with a pre-existing deckId should throw an exception');
+        fail(
+          'Inserting a deck with a pre-existing deckId should throw an exception',
+        );
       } catch (e) {
         expect(e, isA<DatabaseException>());
       }
@@ -75,18 +77,24 @@ tearDown(() async{
   });
 
   group('Card tests', () {
-    test('Insert Card', () async{
-      await dbHelper.insertDeck(Deck(deckId: 1,name: "Test Deck A"));
-      await dbHelper.insertCard(Flashcard(cardId: 1, deckId: 1, front: "Front", back: "Back"));
+    test('Insert Card', () async {
+      await dbHelper.insertDeck(Deck(deckId: 1, name: "Test Deck A"));
+      await dbHelper.insertCard(
+        Flashcard(cardId: 1, deckId: 1, front: "Front", back: "Back"),
+      );
       final card = await dbHelper.getCard(1);
       expect(card?.back, "Back");
       expect(card?.front, "Front");
       expect(card?.cardId, 1);
     });
-    test('Get Cards', () async{
-      await dbHelper.insertDeck(Deck(deckId: 1,name: "Test Deck A"));
-      await dbHelper.insertCard(Flashcard(cardId: 1, deckId: 1, front: "Front", back: "Back"));
-      await dbHelper.insertCard(Flashcard(cardId: 2, deckId: 1, front: "Front2", back: "Back2"));
+    test('Get Cards', () async {
+      await dbHelper.insertDeck(Deck(deckId: 1, name: "Test Deck A"));
+      await dbHelper.insertCard(
+        Flashcard(cardId: 1, deckId: 1, front: "Front", back: "Back"),
+      );
+      await dbHelper.insertCard(
+        Flashcard(cardId: 2, deckId: 1, front: "Front2", back: "Back2"),
+      );
       final cards = await dbHelper.getCardsByDeck(1);
       expect(cards.length, 2);
       expect(cards.first.cardId, 1);
@@ -98,27 +106,41 @@ tearDown(() async{
       expect(cards.last.front, "Front2");
       expect(cards.last.back, "Back2");
     });
-    test('Delete Card', () async{
-      await dbHelper.insertDeck(Deck(deckId: 1,name: "Test Deck A"));
-      await dbHelper.insertCard(Flashcard(cardId: 1, deckId: 1, front: "Front", back: "Back"));
-      await dbHelper.insertCard(Flashcard(cardId: 2, deckId: 1, front: "Front2", back: "Back2"));
+    test('Delete Card', () async {
+      await dbHelper.insertDeck(Deck(deckId: 1, name: "Test Deck A"));
+      await dbHelper.insertCard(
+        Flashcard(cardId: 1, deckId: 1, front: "Front", back: "Back"),
+      );
+      await dbHelper.insertCard(
+        Flashcard(cardId: 2, deckId: 1, front: "Front2", back: "Back2"),
+      );
       await dbHelper.deleteCard(1);
       final cards = await dbHelper.getCardsByDeck(1);
       expect(cards.length, 1);
       expect(cards.first.front, "Front2");
     });
-    test('Update Card', ()async{
-      await dbHelper.insertDeck(Deck(deckId: 1,name: "Test Deck A"));
-      await dbHelper.insertCard(Flashcard(cardId: 1, deckId: 1, front: "Front", back: "Back"));
-      await dbHelper.updateCard(Flashcard(cardId: 1, deckId: 1, front: "New", back: "New"));
+    test('Update Card', () async {
+      await dbHelper.insertDeck(Deck(deckId: 1, name: "Test Deck A"));
+      await dbHelper.insertCard(
+        Flashcard(cardId: 1, deckId: 1, front: "Front", back: "Back"),
+      );
+      await dbHelper.updateCard(
+        Flashcard(cardId: 1, deckId: 1, front: "New", back: "New"),
+      );
       final card = await dbHelper.getCard(1);
       expect(card?.back, "New");
       expect(card?.front, "New");
     });
-    test('Cascading card deletion on deck deletion', () async{
-      final deckId = await dbHelper.insertDeck(Deck(deckId: 1,name: "Test Deck A"));
-      await dbHelper.insertCard(Flashcard(cardId: 1, deckId: 1, front: "Front", back: "Back"));
-      await dbHelper.insertCard(Flashcard(cardId: 2, deckId: 1, front: "Front2", back: "Back2"));
+    test('Cascading card deletion on deck deletion', () async {
+      final deckId = await dbHelper.insertDeck(
+        Deck(deckId: 1, name: "Test Deck A"),
+      );
+      await dbHelper.insertCard(
+        Flashcard(cardId: 1, deckId: 1, front: "Front", back: "Back"),
+      );
+      await dbHelper.insertCard(
+        Flashcard(cardId: 2, deckId: 1, front: "Front2", back: "Back2"),
+      );
       await dbHelper.deleteDeck(deckId);
       final deletedDeck = await dbHelper.getDeck(deckId);
       expect(deletedDeck, isNull);
@@ -127,8 +149,12 @@ tearDown(() async{
     });
     test('Insert card with invalid deckId', () async {
       try {
-        await dbHelper.insertCard(Flashcard(deckId: 999, front: "Invalid", back: "Invalid"));
-        fail('Inserting a card with a non-existent deckId should throw an exception');
+        await dbHelper.insertCard(
+          Flashcard(deckId: 999, front: "Invalid", back: "Invalid"),
+        );
+        fail(
+          'Inserting a card with a non-existent deckId should throw an exception',
+        );
       } catch (e) {
         expect(e, isA<DatabaseException>());
       }
@@ -138,6 +164,28 @@ tearDown(() async{
       expect(deckId, isNonZero);
       final cards = await dbHelper.getCardsByDeck(deckId);
       expect(cards, isEmpty);
+    });
+    test('Get new cards for deck', () async {
+      await dbHelper.insertDeck(Deck(deckId: 1, name: "name"));
+      await dbHelper.insertCard(
+        Flashcard(cardId: 1, deckId: 1, front: "Test", back: "Apple"),
+      );
+      final decks = await dbHelper.getNewCardsByDeck(1);
+      expect(decks.length, 1);
+    });
+    test('Get new cards for deck with no new cards', () async {
+      await dbHelper.insertDeck(Deck(deckId: 1, name: "name"));
+      await dbHelper.insertCard(
+        Flashcard(
+          cardId: 1,
+          deckId: 1,
+          front: "Test",
+          back: "Apple",
+          isNew: false,
+        ),
+      );
+      final decks = await dbHelper.getNewCardsByDeck(1);
+      expect(decks, isEmpty);
     });
   });
 }

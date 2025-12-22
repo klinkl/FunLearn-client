@@ -102,7 +102,7 @@ class LearningController {
         last.month == now.month &&
         last.day == now.day;
     if (!alreadyRanToday) {
-      scheduleNewCards(deckId);
+      await scheduleNewCards(deckId);
       await helper.updateDeck(
         Deck(
           deckId: deck.deckId,
