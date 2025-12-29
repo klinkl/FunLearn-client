@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:funlearn_client/data/models/deck.dart';
+import 'package:funlearn_client/data/models/flashcard.dart';
+import '../data/databaseHelper.dart';
 import '../theme/customColors.dart';
 
 class FlashcardCreatorView extends StatefulWidget {
@@ -12,21 +15,47 @@ class _FlashcardCreatorViewState extends State<FlashcardCreatorView> {
   final TextEditingController _titleController = TextEditingController();
   final TextEditingController _frontController = TextEditingController();
   final TextEditingController _backController = TextEditingController();
+  final List<Map<String, String>> _tempCards = [];
 
+  void _lastCard() {
+    if (_tempCards.isEmpty) return;
+    final last = _tempCards.removeLast();
+    _frontController.text = last['front']!;
+    _backController.text = last['back']!;
+  }
   void _nextCard() {
-    // temporary
+    if (_frontController.text.isEmpty || _backController.text.isEmpty) return;
+
+    _tempCards.add({
+      'front': _frontController.text,
+      'back': _backController.text,
+    });
+
     _frontController.clear();
     _backController.clear();
   }
 
-  void _saveCard() {
+  Future<void> _saveCard() async {
     // temporary
-    print('Titre: ${_titleController.text}');
-    print('Front: ${_frontController.text}');
-    print('Back: ${_backController.text}');
+    if (_titleController.text.isEmpty) return;
+
+    if (_frontController.text.isNotEmpty && _backController.text.isNotEmpty) {
+      _tempCards.add({
+        'front': _frontController.text,
+        'back': _backController.text,
+      });
+    }
+    if (_tempCards.isEmpty) return;
+    final dbHelper = DatabaseHelper(dbPath: 'database.db');
+    final deckId = await dbHelper.insertDeck(Deck(name: _titleController.text));
+    for (var card in _tempCards) {
+      await dbHelper.insertCard(
+        Flashcard(deckId: deckId, front: card['front']!, back: card['back']!),
+      );
+    }
     ScaffoldMessenger.of(
       context,
-    ).showSnackBar(const SnackBar(content: Text('Card saved !')));
+    ).showSnackBar(const SnackBar(content: Text('Deck saved !')));
     Navigator.pop(context);
   }
 
@@ -65,7 +94,7 @@ class _FlashcardCreatorViewState extends State<FlashcardCreatorView> {
                         fontWeight: FontWeight.bold,
                       ),
                       decoration: const InputDecoration(
-                        hintText: 'Flashcard Title',
+                        hintText: 'Deck Title',
                         border: OutlineInputBorder(),
                         contentPadding: EdgeInsets.symmetric(
                           horizontal: 16,
@@ -123,7 +152,7 @@ class _FlashcardCreatorViewState extends State<FlashcardCreatorView> {
                         children: [
                           IconButton(
                             icon: const Icon(Icons.arrow_back_ios),
-                            onPressed: _nextCard,
+                            onPressed: _lastCard,
                           ),
                           ElevatedButton.icon(
                             onPressed: _saveCard,

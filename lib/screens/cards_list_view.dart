@@ -158,10 +158,11 @@ class _CardsListViewState extends State<CardsListView> {
     heroTag: null,
     child: const Icon(Icons.add),
     onPressed: () async{
-    Navigator.push(
+    await Navigator.push(
     context,
     MaterialPageRoute(builder: (_) => FlashcardCreatorView()),
     );
+    await _loadDecks();
     }
 
     ),
