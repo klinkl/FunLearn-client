@@ -26,12 +26,6 @@ class SampleCard extends StatelessWidget {
       child: InkWell(
         borderRadius: BorderRadius.circular(12),
         onTap: () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (_) => LearningView(flashcard: flashcards[1]),
-            ),
-          );
         },
         child: Card(
           color: customColors.card,

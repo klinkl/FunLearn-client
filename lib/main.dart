@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-
 import 'screens/home.dart';
-
+import 'screens/cards_list_view.dart';
+import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 import '../theme/customColors.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -9,6 +9,7 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   final prefs = await SharedPreferences.getInstance();
   final saved = prefs.getString('themeMode') ?? 'light';
+  sqfliteFfiInit();
   runApp(MyApp(initialMode: _parseThemeMode(saved)));
 }
 
