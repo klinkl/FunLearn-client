@@ -16,26 +16,59 @@ class _FlashcardCreatorViewState extends State<FlashcardCreatorView> {
   final TextEditingController _frontController = TextEditingController();
   final TextEditingController _backController = TextEditingController();
   final List<Map<String, String>> _tempCards = [];
+  var currentIndex = 0;
+
+  void _loadCard() {
+    if (currentIndex < 0) {
+      currentIndex = 0;
+    }
+    if (currentIndex >= _tempCards.length) {
+      if (currentIndex > _tempCards.length) {
+        currentIndex = currentIndex - 1;
+      }
+      _frontController.clear();
+      _backController.clear();
+      return;
+    }
+    _frontController.text = _tempCards[currentIndex]['front']!;
+    _backController.text = _tempCards[currentIndex]['back']!;
+  }
 
   void _lastCard() {
-    if (_tempCards.isEmpty) return;
-    final last = _tempCards.removeLast();
-    _frontController.text = last['front']!;
-    _backController.text = last['back']!;
+    setState(() {
+      _saveCard();
+      currentIndex = currentIndex - 1;
+      _loadCard();
+    });
   }
+
   void _nextCard() {
+    setState(() {
+      _saveCard();
+      currentIndex = currentIndex + 1;
+      _loadCard();
+    });
+  }
+
+  void _saveCard() {
     if (_frontController.text.isEmpty || _backController.text.isEmpty) return;
 
-    _tempCards.add({
-      'front': _frontController.text,
-      'back': _backController.text,
-    });
-
+    if (currentIndex < _tempCards.length) {
+      _tempCards[currentIndex] = {
+        'front': _frontController.text,
+        'back': _backController.text,
+      };
+    } else {
+      _tempCards.add({
+        'front': _frontController.text,
+        'back': _backController.text,
+      });
+    }
     _frontController.clear();
     _backController.clear();
   }
 
-  Future<void> _saveCard() async {
+  Future<void> _saveDeck() async {
     // temporary
     if (_titleController.text.isEmpty) return;
 
@@ -155,7 +188,7 @@ class _FlashcardCreatorViewState extends State<FlashcardCreatorView> {
                             onPressed: _lastCard,
                           ),
                           ElevatedButton.icon(
-                            onPressed: _saveCard,
+                            onPressed: _saveDeck,
                             icon: const Icon(Icons.save),
                             label: const Text('Save'),
                           ),
@@ -164,6 +197,20 @@ class _FlashcardCreatorViewState extends State<FlashcardCreatorView> {
                             onPressed: _nextCard,
                           ),
                         ],
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    Flexible(
+                      flex: 0,
+                      child: Padding(
+                        padding: const EdgeInsets.only(bottom: 16),
+                        child: Text(
+                          'Card ${currentIndex + 1} of ${_tempCards.length + 1}',
+                          style: const TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
                       ),
                     ),
                   ],
