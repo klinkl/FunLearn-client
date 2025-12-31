@@ -2,6 +2,7 @@ import 'package:fsrs/fsrs.dart';
 import 'package:funlearn_client/data/databaseHelper.dart';
 import 'package:funlearn_client/data/models/flashcard.dart';
 import 'package:funlearn_client/data/models/deck.dart';
+import 'package:funlearn_client/data/studySessionController.dart';
 
 class LearningController {
   final DatabaseHelper helper;
@@ -9,8 +10,12 @@ class LearningController {
     learningSteps: [Duration(milliseconds: 0), Duration(milliseconds: 0)],
     relearningSteps: [Duration(milliseconds: 0)],
   );
+  late final StudySessionController studySessionController;
 
-  LearningController(this.helper);
+  LearningController(this.helper) {
+    studySessionController = StudySessionController(helper);
+    studySessionController.init();
+  }
 
   Future<Flashcard?> getNextCard(int deckId) async {
     final dueCards = await helper.fetchDueCards(deckId);
@@ -36,7 +41,8 @@ class LearningController {
     //print(updatedCard.toMap());
     //print(timeDelta);
     await helper.updateCard(updatedCard);
-  }
+
+    await studySessionController.createSession(rating);}
 
   Future<void> scheduleNewCardsOnDemand(int deckId, int amount) async {
     final deck = await helper.getDeck(deckId);
@@ -98,9 +104,9 @@ class LearningController {
     final last = deck.lastNewCardsRelease;
     final alreadyRanToday =
         last != null &&
-        last.year == now.year &&
-        last.month == now.month &&
-        last.day == now.day;
+            last.year == now.year &&
+            last.month == now.month &&
+            last.day == now.day;
     if (!alreadyRanToday) {
       await scheduleNewCards(deckId);
       await helper.updateDeck(

@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:funlearn_client/data/UserController.dart';
+import 'data/databaseHelper.dart';
 import 'screens/home.dart';
 import 'screens/cards_list_view.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
@@ -10,9 +12,16 @@ void main() async {
   final prefs = await SharedPreferences.getInstance();
   final saved = prefs.getString('themeMode') ?? 'light';
   sqfliteFfiInit();
+  initUser();
   runApp(MyApp(initialMode: _parseThemeMode(saved)));
 }
-
+void initUser() async{
+  databaseFactory = databaseFactoryFfi;
+  final dbHelper = DatabaseHelper(dbPath: 'database.db');
+  //dbHelper.resetDatabase();
+  final userController = UserController(dbHelper);
+  userController.getOrCreateUser(dbHelper);
+}
 ThemeMode _parseThemeMode(String s) {
   switch (s) {
     case 'light':
