@@ -1,4 +1,5 @@
 import 'package:fsrs/fsrs.dart';
+import 'package:funlearn_client/data/UserController.dart';
 
 import 'databaseHelper.dart';
 import 'models/studySession.dart';
@@ -6,13 +7,14 @@ import 'models/studySession.dart';
 class StudySessionController {
   final DatabaseHelper helper;
   late final int userId;
-
+  late final UserController userController;
   StudySessionController(this.helper);
 
   Future<void> init() async {
     final users = await helper.getAllUsers();
     if (users.isEmpty) throw Exception('No users found');
     userId = users.first.userId!;
+    userController = UserController(helper);
   }
 
   int xpFromRating(Rating rating) {
@@ -51,5 +53,6 @@ class StudySessionController {
       timeStamp: DateTime.now().toUtc(),
     );
     await helper.insertStudySession(session);
+    await userController.updateUserWithStudySession(session);
   }
 }

@@ -18,7 +18,7 @@ void main() async {
 void initUser() async{
   databaseFactory = databaseFactoryFfi;
   final dbHelper = DatabaseHelper(dbPath: 'database.db');
-  //dbHelper.resetDatabase();
+  dbHelper.resetDatabase();
   final userController = UserController(dbHelper);
   userController.getOrCreateUser(dbHelper);
 }

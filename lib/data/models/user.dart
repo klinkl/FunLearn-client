@@ -5,6 +5,8 @@ class User {
   int totalCardsLearned;
   int currentStreak;
   DateTime? lastStudyDate;
+  int level;
+  int xpToNextLevel;
 
   User({
     this.username = "User",
@@ -13,6 +15,8 @@ class User {
     this.totalCardsLearned = 0,
     this.currentStreak = 0,
     this.lastStudyDate,
+    this.level = 1,
+    this.xpToNextLevel = 25,
   });
 
   Map<String, dynamic> toMap() {
@@ -23,6 +27,8 @@ class User {
       'totalCardsLearned': totalCardsLearned,
       'currentStreak': currentStreak,
       'lastStudyDate': lastStudyDate?.millisecondsSinceEpoch,
+      'level' : level,
+      'xpToNextLevel': xpToNextLevel,
     };
   }
 
@@ -33,10 +39,14 @@ class User {
       totalXP: map['totalXP'],
       totalCardsLearned: map['totalCardsLearned'],
       currentStreak: map['currentStreak'],
-      lastStudyDate: DateTime.fromMillisecondsSinceEpoch(
-        map['lastStudyDate'] ?? DateTime.now().millisecondsSinceEpoch,
-        isUtc: true,
-      ),
+      level: map['level'],
+      xpToNextLevel: map['xpToNextLevel'],
+      lastStudyDate: map['lastStudyDate'] != null
+          ? DateTime.fromMillisecondsSinceEpoch(
+              map['lastStudyDate'],
+              isUtc: true,
+            )
+          : null,
     );
   }
 }

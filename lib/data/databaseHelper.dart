@@ -75,7 +75,9 @@ class DatabaseHelper {
     totalXP INTEGER NOT NULL DEFAULT 0,
     totalCardsLearned INTEGER NOT NULL DEFAULT 0,
     currentStreak INTEGER NOT NULL DEFAULT 0,
-    lastStudyDate INTEGER
+    lastStudyDate INTEGER,
+    level INTEGER NOT NULL DEFAULT 1,
+    xpToNextLevel INTEGER NOT NULL DEFAULT 25
 );
 ''');
     await db.execute('''
@@ -112,6 +114,15 @@ class DatabaseHelper {
 
     return maps.map((map) => StudySession.fromMap(map)).toList();
   }
+  Future<User?> getUserById(int userId) async{
+    final db = await _instance!.database;
+    final user = await db.query('User', where: 'userId = ?', whereArgs: [userId]);
+    if (user.isNotEmpty) {
+      return User.fromMap(user.first);
+    } else {
+      return null;
+    }
+  }
   Future<List<User>> getAllUsers() async {
     final db = await _instance!.database;
     final maps = await db.query('User');
@@ -130,7 +141,7 @@ class DatabaseHelper {
   Future<int> updateUser(User user) async {
     final db = await _instance!.database;
     return await db.update(
-      'Card',
+      'User',
       user.toMap(),
       where: 'userId = ?',
       whereArgs: [user.userId],

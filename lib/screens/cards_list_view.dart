@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import '../data/models/user.dart';
 import '../theme/customColors.dart';
 import './card_creation_view.dart';
 import '../widgets/user_info.dart';
@@ -36,6 +37,7 @@ class _CardsListViewState extends State<CardsListView> {
   void _onItemTapped(int index) => setState(() => _selectedIndex = index);
   final dbHelper = DatabaseHelper(dbPath: 'database.db');
   List<Deck> decks = [];
+  User user = User();
   late final ApkgImportService importService = ApkgImportService(
     source: FilePickerApkgSource(),
     extractor: ApkgExtractor(),
@@ -57,8 +59,16 @@ class _CardsListViewState extends State<CardsListView> {
     databaseFactory = databaseFactoryFfi;
     //dbHelper.resetDatabase();
     _loadDecks();
+    _loadUser();
   }
-
+  Future<void> _loadUser() async{
+    final users = await dbHelper.getAllUsers();
+    setState(() {
+      if (users.isNotEmpty) {
+        user = users.first;
+      }
+    });
+  }
   Future<void> _loadDecks() async {
     final fetchedDecks = await dbHelper.getDecks();
     if (kDebugMode) {
@@ -88,13 +98,13 @@ class _CardsListViewState extends State<CardsListView> {
               children: [
               const SizedBox(height: 32),
 
-          const Userinfo(
+          Userinfo(
             profilPicture: 'assets/images/default_pfp.png',
-            userName: 'Eliott',
-            exp: 125,
-            expNextLevel: 250,
-            level: 12,
-            streak: 7,
+            userName: user.username,
+            exp: user.totalXP,
+            expNextLevel: user.xpToNextLevel,
+            level: user.level,
+            streak: user.currentStreak,
           ),
           const SizedBox(height: 24),
           Expanded(
@@ -110,13 +120,14 @@ class _CardsListViewState extends State<CardsListView> {
                 ),
                 itemBuilder: (context, index) {
                   return Card(child: _SampleCard(cardName: decks[index].name,
-                      onTap: () {
-                        Navigator.push(
+                      onTap: () async {
+                        await Navigator.push(
                           context,
                           MaterialPageRoute(
                               builder: (_) => LearningView(deck: decks[index])
                           ),
                         );
+                        await _loadUser();
                       },
                   ),
                   );

@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import '../data/databaseHelper.dart';
+import '../data/models/user.dart';
 import '../theme/customColors.dart';
 import '../widgets/user_info.dart';
 
@@ -18,6 +20,23 @@ class LeaderboardView extends StatefulWidget {
 
 class _LeaderBoardState extends State<LeaderboardView> {
   bool _world = false;
+  List<User> _users = [];
+  bool _loading = true;
+  final DatabaseHelper dbHelper = DatabaseHelper(dbPath: 'database.db');
+
+  @override
+  void initState() {
+    super.initState();
+    _loadUsers();
+  }
+  Future<void> _loadUsers() async {
+    final users = await dbHelper.getAllUsers();
+    users.sort((a, b) => b.totalXP.compareTo(a.totalXP));
+    setState(() {
+      _users = users;
+      _loading = false;
+    });
+  }
 
   void _onButtonTap() {
     setState(() {
@@ -29,7 +48,11 @@ class _LeaderBoardState extends State<LeaderboardView> {
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     final customColors = Theme.of(context).extension<CustomColors>()!;
-
+    if (_loading) {
+      return Scaffold(
+        body: Center(child: CircularProgressIndicator()),
+      );
+    }
     return Scaffold(
       body: Center(
         child: ListView(
@@ -50,46 +73,18 @@ class _LeaderBoardState extends State<LeaderboardView> {
                   style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
                 ),
               ),
-            ListTile(
-              title: Userinfo(
-                profilPicture: 'assets/images/default_pfp.png',
-                userName: 'Romuald',
-                exp: 26,
-                expNextLevel: 250,
-                level: 67,
-                streak: 47,
-              ),
-            ),
-            ListTile(
-              title: Userinfo(
-                profilPicture: 'assets/images/default_pfp.png',
-                userName: 'Hans',
-                exp: 75,
-                expNextLevel: 250,
-                level: 45,
-                streak: 32,
-              ),
-            ),
-            ListTile(
-              title: Userinfo(
-                profilPicture: 'assets/images/default_pfp.png',
-                userName: 'Annett',
-                exp: 168,
-                expNextLevel: 250,
-                level: 34,
-                streak: 22,
-              ),
-            ),
-            ListTile(
-              title: Userinfo(
-                profilPicture: 'assets/images/default_pfp.png',
-                userName: 'Pablo',
-                exp: 12,
-                expNextLevel: 250,
-                level: 12,
-                streak: 12,
-              ),
-            ),
+            ..._users.map((user) {
+              return ListTile(
+                title: Userinfo(
+                  profilPicture: 'assets/images/default_pfp.png',
+                  userName: user.username,
+                  exp: user.totalXP,
+                  expNextLevel: user.xpToNextLevel,
+                  level: user.level,
+                  streak: user.currentStreak,
+                ),
+              );
+            }),
           ],
         ),
       ),
