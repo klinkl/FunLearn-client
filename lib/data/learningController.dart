@@ -6,6 +6,7 @@ import 'package:funlearn_client/data/questController.dart';
 import 'package:funlearn_client/data/studySessionController.dart';
 
 class LearningController {
+  static LearningController? _instance;
   final DatabaseHelper helper;
   final scheduler = Scheduler(
     learningSteps: [Duration(milliseconds: 0), Duration(milliseconds: 0)],
@@ -13,13 +14,15 @@ class LearningController {
   );
   late final StudySessionController studySessionController;
   late final QuestController questController;
-  LearningController(this.helper) {
-    studySessionController = StudySessionController(helper);
+  LearningController._internal(this.helper) {
+    studySessionController = StudySessionController.getInstance(helper);
     studySessionController.init();
-    questController = QuestController(helper);
+    questController = QuestController.getInstance(helper);
     questController.createQuestsWhenOffline();
   }
-
+  static LearningController getInstance(DatabaseHelper helper) {
+    return _instance ??= LearningController._internal(helper);
+  }
   Future<Flashcard?> getNextCard(int deckId) async {
     final dueCards = await helper.fetchDueCards(deckId);
     return dueCards.isNotEmpty ? dueCards.first : null;

@@ -22,6 +22,8 @@ class _QuestViewState extends State<QuestView> {
   List<ModelQuest> _quests = [];
   bool _loading = true;
   final DatabaseHelper dbHelper = DatabaseHelper(dbPath: 'database.db');
+
+  @override
   void initState() {
     super.initState();
     _loadQuests();

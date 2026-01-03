@@ -5,10 +5,14 @@ import 'models/studySession.dart';
 import 'models/user.dart';
 
 class QuestController {
+  static QuestController? _instance;
   final DatabaseHelper helper;
 
-  QuestController(this.helper);
+  QuestController._internal(this.helper);
 
+  static QuestController getInstance(DatabaseHelper helper) {
+    return _instance ??= QuestController._internal(helper);
+  }
   Future<void> createQuestsWhenOffline() async {
     final users = await helper.getAllUsers();
     if (users.isEmpty) throw Exception('No users found');
@@ -47,7 +51,7 @@ class QuestController {
     final quests = await helper.getAllQuestsByUser(studySession.userId);
     if (quests.isEmpty) return;
     for (var quest in quests) {
-      if (quest.finished) return;
+      if (quest.finished) continue;
       switch (quest.questType) {
         case QuestType.XP:
           var newValue = quest.currentValue + studySession.xp;
@@ -86,7 +90,7 @@ class QuestController {
               requestedValue: quest.requestedValue,
               friendsQuest: quest.friendsQuest,
               questId: quest.questId,
-              currentValue: quest.currentValue + studySession.cardsLearnt,
+              currentValue: newValue,
               finished: finished,
             ),
           );

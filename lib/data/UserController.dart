@@ -3,10 +3,13 @@ import 'models/studySession.dart';
 import 'models/user.dart';
 
 class UserController {
+  static UserController? _instance;
   final DatabaseHelper helper;
 
-  UserController(this.helper);
-
+  UserController._internal(this.helper);
+  static UserController getInstance(DatabaseHelper helper) {
+    return _instance ??= UserController._internal(helper);
+  }
   Future<User> getOrCreateUser(DatabaseHelper helper) async {
     final users = await helper.getAllUsers();
     if (users.isNotEmpty) return users.first;

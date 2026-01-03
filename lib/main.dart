@@ -19,7 +19,7 @@ void initUser() async{
   databaseFactory = databaseFactoryFfi;
   final dbHelper = DatabaseHelper(dbPath: 'database.db');
   dbHelper.resetDatabase();
-  final userController = UserController(dbHelper);
+  final userController = UserController.getInstance(dbHelper);
   userController.getOrCreateUser(dbHelper);
 }
 ThemeMode _parseThemeMode(String s) {
