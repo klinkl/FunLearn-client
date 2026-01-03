@@ -18,7 +18,6 @@ class LearningController {
     studySessionController = StudySessionController.getInstance(helper);
     studySessionController.init();
     questController = QuestController.getInstance(helper);
-    questController.createQuestsWhenOffline();
   }
   static LearningController getInstance(DatabaseHelper helper) {
     return _instance ??= LearningController._internal(helper);
@@ -48,9 +47,9 @@ class LearningController {
     //print(timeDelta);
     await helper.updateCard(updatedCard);
 
-    final session = await studySessionController.createSession(rating);
+    final (lastStudy, session) = await studySessionController.createSession(rating);
 
-    await questController.updateQuestsWithStudySession(session);
+    await questController.updateQuestsWithStudySession(session, lastStudy);
   }
 
   Future<void> scheduleNewCardsOnDemand(int deckId, int amount) async {

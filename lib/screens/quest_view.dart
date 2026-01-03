@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:funlearn_client/data/models/modelQuest.dart';
+import 'package:funlearn_client/data/questController.dart';
 import '../data/databaseHelper.dart';
 import '../theme/customColors.dart';
 import '../widgets/quest.dart';
@@ -21,15 +22,15 @@ class QuestView extends StatefulWidget {
 class _QuestViewState extends State<QuestView> {
   List<ModelQuest> _quests = [];
   bool _loading = true;
-  final DatabaseHelper dbHelper = DatabaseHelper(dbPath: 'database.db');
-
+  final QuestController questController = QuestController.getInstance(DatabaseHelper(dbPath: 'database.db'));
   @override
   void initState() {
     super.initState();
     _loadQuests();
   }
   Future<void> _loadQuests() async {
-    final quests = await dbHelper.getAllQuests();
+    await questController.createQuestsWhenOffline();
+    final quests = await questController.getRelevantQuests();
     setState(() {
       _quests = quests;
       _loading = false;
@@ -53,6 +54,7 @@ class _QuestViewState extends State<QuestView> {
                 value: quest.currentValue,
                 requestedValue: quest.requestedValue,
                 finished: quest.finished,
+                expiryDate: quest.expiryDate,
               ),
             );
           }),
@@ -61,65 +63,6 @@ class _QuestViewState extends State<QuestView> {
           ListTile(title: Text('Daily Quests')),
           SizedBox(height: 12),
 
-          ListTile(
-            title: Quest(
-              rarity: 1,
-              quest: 'finish 10 flashcards',
-              value: 3,
-              requestedValue: 10,
-              finished: false,
-            ),
-          ),
-          ListTile(
-            title: Quest(
-              rarity: 2,
-              quest: 'finish 10 flashcards',
-              value: 3,
-              requestedValue: 10,
-              finished: true,
-            ),
-          ),
-          ListTile(
-            title: Quest(
-              rarity: 3,
-              quest: 'finish 10 flashcards',
-              value: 3,
-              requestedValue: 10,
-              finished: true,
-            ),
-          ),
-
-          SizedBox(height: 12),
-          ListTile(title: Text('Weekly Quests')),
-          SizedBox(height: 12),
-
-          ListTile(
-            title: Quest(
-              rarity: 1,
-              quest: 'finish 10 flashcards',
-              value: 3,
-              requestedValue: 10,
-              finished: false,
-            ),
-          ),
-          ListTile(
-            title: Quest(
-              rarity: 2,
-              quest: 'play everyday',
-              value: 7,
-              requestedValue: 7,
-              finished: true,
-            ),
-          ),
-          ListTile(
-            title: Quest(
-              rarity: 3,
-              quest: 'finish 10 flashcards',
-              value: 3,
-              requestedValue: 10,
-              finished: true,
-            ),
-          ),
         ],
       ),
     );

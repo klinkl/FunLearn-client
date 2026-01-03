@@ -53,7 +53,7 @@ class UserController {
     return (level, xpNeeded);
   }
 
-  Future<void> updateUserWithStudySession(StudySession studySession) async {
+  Future<DateTime?> updateUserWithStudySession(StudySession studySession) async {
     final user = await helper.getUserById(studySession.userId);
     final (newLevel, xpTowardsNextLevel) = calculateLevel(studySession, user!);
     await helper.updateUser(
@@ -68,5 +68,6 @@ class UserController {
         xpToNextLevel: xpTowardsNextLevel,
       ),
     );
+    return user.lastStudyDate;
   }
 }

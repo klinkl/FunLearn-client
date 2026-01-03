@@ -47,7 +47,7 @@ class StudySessionController {
     }
   }
 
-  Future<StudySession> createSession(Rating rating) async {
+  Future<(DateTime?, StudySession)> createSession(Rating rating) async {
     final xp = xpFromRating(rating);
     final cardsLearnt = cardsLearnedFromRating(rating);
     final session = StudySession(
@@ -57,7 +57,7 @@ class StudySessionController {
       timeStamp: DateTime.now().toUtc(),
     );
     await helper.insertStudySession(session);
-    await userController.updateUserWithStudySession(session);
-    return session;
+    final lastStudy = await userController.updateUserWithStudySession(session);
+    return (lastStudy, session);
   }
 }

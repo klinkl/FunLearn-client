@@ -61,4 +61,4 @@ class ModelQuest {
   }
 }
 
-enum QuestType { XP, CardsLearnt }
+enum QuestType { XP, CardsLearnt, Streak }

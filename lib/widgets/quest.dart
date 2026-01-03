@@ -1,14 +1,14 @@
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import '../theme/customColors.dart';
 import './progress_bar.dart';
-
 class Quest extends StatelessWidget {
   final int rarity;
   final String quest;
   final int value;
   final int requestedValue;
   final bool finished;
-
+  final DateTime expiryDate;
   const Quest({
     super.key,
     required this.rarity,
@@ -16,6 +16,7 @@ class Quest extends StatelessWidget {
     required this.value,
     required this.requestedValue,
     required this.finished,
+    required this.expiryDate,
   });
 
   @override
@@ -49,10 +50,21 @@ class Quest extends StatelessWidget {
                 progress: value / requestedValue,
                 text: '$value / $requestedValue',
               ),
+              const SizedBox(height: 4),
+              Text(
+                'Expires ${_formatExpiry(expiryDate)}',
+                style: TextStyle(
+                  fontSize: 12,
+                  color: cs.onSurfaceVariant,
+                ),
+              ),
             ],
           ),
         ],
       ),
     );
+  }
+  String _formatExpiry(DateTime expiryDate) {
+    return DateFormat('d MMM, HH:mm').format(expiryDate.toLocal());
   }
 }

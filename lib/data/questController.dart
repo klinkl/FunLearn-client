@@ -13,6 +13,19 @@ class QuestController {
   static QuestController getInstance(DatabaseHelper helper) {
     return _instance ??= QuestController._internal(helper);
   }
+
+  Future<List<ModelQuest>> getRelevantQuests() async {
+    final users = await helper.getAllUsers();
+    if (users.isEmpty) throw Exception('No users found');
+    final user = users.first;
+    final currentQuests = await helper.getAllQuestsByUser(user.userId!);
+    // only see quests that havent expired or expired in the last 12 hours
+    final cutoff = DateTime.now().toUtc().subtract(const Duration(hours: 12));
+    return currentQuests.where((quest) {
+      return quest.expiryDate.isAfter(cutoff);
+    }).toList();
+  }
+
   Future<void> createQuestsWhenOffline() async {
     final users = await helper.getAllUsers();
     if (users.isEmpty) throw Exception('No users found');
@@ -44,10 +57,23 @@ class QuestController {
           friendsQuest: false,
         ),
       );
+      await helper.insertQuest(
+        ModelQuest(
+          userIds: [user.userId!],
+          questType: QuestType.Streak,
+          startDate: currentTime,
+          expiryDate: currentTime.add(const Duration(days: 7)),
+          requestedValue: 3,
+          friendsQuest: false,
+        ),
+      );
     }
   }
 
-  Future<void> updateQuestsWithStudySession(StudySession studySession) async {
+  Future<void> updateQuestsWithStudySession(
+    StudySession studySession,
+    DateTime? lastStudyDate,
+  ) async {
     final quests = await helper.getAllQuestsByUser(studySession.userId);
     if (quests.isEmpty) return;
     for (var quest in quests) {
@@ -91,6 +117,42 @@ class QuestController {
               friendsQuest: quest.friendsQuest,
               questId: quest.questId,
               currentValue: newValue,
+              finished: finished,
+            ),
+          );
+          break;
+        case QuestType.Streak:
+          var newStreak = 0;
+          if (lastStudyDate == null) {
+            newStreak = 1;
+          } else {
+            final last = DateTime(
+              lastStudyDate.year,
+              lastStudyDate.month,
+              lastStudyDate.day,
+            );
+            final today = DateTime.now();
+            final current = DateTime(today.year, today.month, today.day);
+
+            final difference = current.difference(last).inDays;
+            if (difference == 1) newStreak = quest.currentValue + 1;
+            if (difference > 1) newStreak = quest.currentValue;
+            newStreak = quest.currentValue;
+          }
+          var finished = false;
+          if (newStreak >= quest.requestedValue) {
+            finished = true;
+          }
+          await helper.updateQuest(
+            ModelQuest(
+              userIds: quest.userIds,
+              questType: quest.questType,
+              expiryDate: quest.expiryDate,
+              startDate: quest.startDate,
+              requestedValue: quest.requestedValue,
+              friendsQuest: quest.friendsQuest,
+              questId: quest.questId,
+              currentValue: newStreak,
               finished: finished,
             ),
           );

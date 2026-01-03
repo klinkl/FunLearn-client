@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:funlearn_client/data/UserController.dart';
+import 'package:funlearn_client/data/questController.dart';
 import 'data/databaseHelper.dart';
 import 'screens/home.dart';
 import 'screens/cards_list_view.dart';
@@ -12,15 +13,17 @@ void main() async {
   final prefs = await SharedPreferences.getInstance();
   final saved = prefs.getString('themeMode') ?? 'light';
   sqfliteFfiInit();
-  initUser();
+  initApplication();
   runApp(MyApp(initialMode: _parseThemeMode(saved)));
 }
-void initUser() async{
+void initApplication() async{
   databaseFactory = databaseFactoryFfi;
   final dbHelper = DatabaseHelper(dbPath: 'database.db');
   dbHelper.resetDatabase();
   final userController = UserController.getInstance(dbHelper);
-  userController.getOrCreateUser(dbHelper);
+  await userController.getOrCreateUser(dbHelper);
+  final questController = QuestController.getInstance(dbHelper);
+  await questController.createQuestsWhenOffline();
 }
 ThemeMode _parseThemeMode(String s) {
   switch (s) {

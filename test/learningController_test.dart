@@ -21,7 +21,7 @@ void main() {
   setUp(() async {
     dbHelper = DatabaseHelper(dbPath: path);
     await dbHelper.resetDatabase();
-    controller = LearningController(DatabaseHelper(dbPath: path));
+    controller = LearningController.getInstance(DatabaseHelper(dbPath: path));
   });
   tearDown(() async {
     await dbHelper.resetDatabase();
