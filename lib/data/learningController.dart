@@ -2,6 +2,7 @@ import 'package:fsrs/fsrs.dart';
 import 'package:funlearn_client/data/databaseHelper.dart';
 import 'package:funlearn_client/data/models/flashcard.dart';
 import 'package:funlearn_client/data/models/deck.dart';
+import 'package:funlearn_client/data/questController.dart';
 import 'package:funlearn_client/data/studySessionController.dart';
 
 class LearningController {
@@ -11,10 +12,12 @@ class LearningController {
     relearningSteps: [Duration(milliseconds: 0)],
   );
   late final StudySessionController studySessionController;
-
+  late final QuestController questController;
   LearningController(this.helper) {
     studySessionController = StudySessionController(helper);
     studySessionController.init();
+    questController = QuestController(helper);
+    questController.createQuestsWhenOffline();
   }
 
   Future<Flashcard?> getNextCard(int deckId) async {
@@ -42,7 +45,10 @@ class LearningController {
     //print(timeDelta);
     await helper.updateCard(updatedCard);
 
-    await studySessionController.createSession(rating);}
+    final session = await studySessionController.createSession(rating);
+
+    await questController.updateQuestsWithStudySession(session);
+  }
 
   Future<void> scheduleNewCardsOnDemand(int deckId, int amount) async {
     final deck = await helper.getDeck(deckId);

@@ -42,6 +42,7 @@ dependencies:
   path: ^1.9.1
   flutter_expandable_fab: ^2.5.2
   fsrs: ^2.0.1
+  uuid: ^4.4.2
 dev_dependencies:
   sqflite_common_ffi:
   flutter_test:

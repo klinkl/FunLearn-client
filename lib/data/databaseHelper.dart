@@ -4,6 +4,7 @@ import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart';
 import 'package:sqflite/sqflite.dart' as databaseFactoryFfi;
 
+import 'models/modelQuest.dart';
 import 'models/flashcard.dart';
 import 'models/user.dart';
 
@@ -90,6 +91,19 @@ class DatabaseHelper {
     FOREIGN KEY (userId) REFERENCES User(userId) ON DELETE CASCADE
 );
     ''');
+    await db.execute('''
+    CREATE TABLE ModelQuest (
+    questId TEXT PRIMARY KEY,
+    userIds TEXT NOT NULL,
+    questType TEXT NOT NULL,
+    startDate INTEGER NOT NULL,
+    expiryDate INTEGER NOT NULL,
+    currentValue INTEGER NOT NULL DEFAULT 0,
+    requestedValue INTEGER NOT NULL,
+    finished INTEGER CHECK (finished IN (0,1)),
+    friendsQuest INTEGER CHECK (friendsQuest IN (0,1))
+);
+    ''');
   }
 
   Future<int> insertStudySession(StudySession studySession) async {
@@ -114,20 +128,67 @@ class DatabaseHelper {
 
     return maps.map((map) => StudySession.fromMap(map)).toList();
   }
-  Future<User?> getUserById(int userId) async{
+
+  Future<User?> getUserById(int userId) async {
     final db = await _instance!.database;
-    final user = await db.query('User', where: 'userId = ?', whereArgs: [userId]);
+    final user = await db.query(
+      'User',
+      where: 'userId = ?',
+      whereArgs: [userId],
+    );
     if (user.isNotEmpty) {
       return User.fromMap(user.first);
     } else {
       return null;
     }
   }
+
+  Future<List<ModelQuest>> getAllQuestsByUser(int userId) async {
+    final db = await _instance!.database;
+    final maps = await db.rawQuery(
+      '''
+  SELECT * FROM ModelQuest
+  WHERE EXISTS (
+    SELECT 1 FROM json_each(userIds) WHERE json_each.value = ?
+  )
+  ''',
+      [userId],
+    );
+    return maps.map((map) => ModelQuest.fromMap(map)).toList();
+  }
+
+  Future<List<ModelQuest>> getAllQuests() async {
+    final db = await _instance!.database;
+    final maps = await db.query('ModelQuest');
+    return maps.map((map) => ModelQuest.fromMap(map)).toList();
+  }
+
+  Future<int> insertQuest(ModelQuest quest) async {
+    final db = await _instance!.database;
+    return await db.insert('ModelQuest', quest.toMap());
+  }
+
+  Future<int> deleteQuest(String questId) async {
+    final db = await _instance!.database;
+    return await db.delete('ModelQuest', where: 'questId = ?', whereArgs: [questId]);
+  }
+
+  Future<int> updateQuest(ModelQuest quest) async {
+    final db = await _instance!.database;
+    return await db.update(
+      'ModelQuest',
+      quest.toMap(),
+      where: 'questId = ?',
+      whereArgs: [quest.questId],
+    );
+  }
+
   Future<List<User>> getAllUsers() async {
     final db = await _instance!.database;
     final maps = await db.query('User');
     return maps.map((map) => User.fromMap(map)).toList();
   }
+
   Future<int> insertUser(User user) async {
     final db = await _instance!.database;
     return await db.insert('User', user.toMap());
