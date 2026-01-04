@@ -135,9 +135,13 @@ class QuestController {
             final current = DateTime(today.year, today.month, today.day);
 
             final difference = current.difference(last).inDays;
-            if (difference == 1) newStreak = quest.currentValue + 1;
-            if (difference > 1) newStreak = quest.currentValue;
-            newStreak = quest.currentValue;
+            if (difference == 1) {
+              newStreak = quest.currentValue + 1;
+            } else if (difference > 1) {
+              newStreak = 1;
+            } else if (difference == 0) {
+              newStreak = quest.currentValue;
+            }
           }
           var finished = false;
           if (newStreak >= quest.requestedValue) {

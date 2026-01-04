@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:funlearn_client/data/UserController.dart';
+import 'package:funlearn_client/data/userController.dart';
 import 'package:funlearn_client/data/questController.dart';
 import 'data/databaseHelper.dart';
 import 'screens/home.dart';
@@ -19,9 +19,9 @@ void main() async {
 void initApplication() async{
   databaseFactory = databaseFactoryFfi;
   final dbHelper = DatabaseHelper(dbPath: 'database.db');
-  dbHelper.resetDatabase();
+  //dbHelper.resetDatabase();
   final userController = UserController.getInstance(dbHelper);
-  await userController.getOrCreateUser(dbHelper);
+  await userController.getOrCreateUser();
   final questController = QuestController.getInstance(dbHelper);
   await questController.createQuestsWhenOffline();
 }

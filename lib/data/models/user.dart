@@ -1,6 +1,8 @@
+import 'package:uuid/uuid.dart';
+
 class User {
   String username;
-  int? userId;
+  final String userId;
   int totalXP;
   int totalCardsLearned;
   int currentStreak;
@@ -10,14 +12,14 @@ class User {
 
   User({
     this.username = "User",
-    this.userId,
+    String? userId,
     this.totalXP = 0,
     this.totalCardsLearned = 0,
     this.currentStreak = 0,
     this.lastStudyDate,
     this.level = 1,
     this.xpToNextLevel = 25,
-  });
+  }): userId = userId ?? const Uuid().v4();
 
   Map<String, dynamic> toMap() {
     return {

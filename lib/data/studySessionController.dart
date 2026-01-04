@@ -1,5 +1,6 @@
+import 'package:flutter/cupertino.dart';
 import 'package:fsrs/fsrs.dart';
-import 'package:funlearn_client/data/UserController.dart';
+import 'package:funlearn_client/data/userController.dart';
 import 'package:funlearn_client/data/questController.dart';
 
 import 'databaseHelper.dart';
@@ -8,7 +9,7 @@ import 'models/studySession.dart';
 class StudySessionController {
   static StudySessionController? _instance;
   final DatabaseHelper helper;
-  late final int userId;
+  late String userId;
   late final UserController userController;
   StudySessionController._internal(this.helper);
   static StudySessionController getInstance(DatabaseHelper helper) {
@@ -60,4 +61,10 @@ class StudySessionController {
     final lastStudy = await userController.updateUserWithStudySession(session);
     return (lastStudy, session);
   }
+
+  @visibleForTesting
+  void setUserIdForTest(String id) {
+    userId = id;
+  }
+
 }

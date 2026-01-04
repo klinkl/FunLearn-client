@@ -71,7 +71,7 @@ class DatabaseHelper {
 
     await db.execute('''
     CREATE TABLE User (
-    userId INTEGER PRIMARY KEY AUTOINCREMENT,
+    userId TEXT PRIMARY KEY,
     username TEXT NOT NULL DEFAULT 'User',
     totalXP INTEGER NOT NULL DEFAULT 0,
     totalCardsLearned INTEGER NOT NULL DEFAULT 0,
@@ -83,11 +83,11 @@ class DatabaseHelper {
 ''');
     await db.execute('''
     CREATE TABLE StudySession (
+    studySessionId TEXT PRIMARY KEY,
     timeStamp INTEGER NOT NULL,
-    userId INTEGER NOT NULL,
+    userId TEXT NOT NULL,
     xp INTEGER NOT NULL,
     cardsLearnt INTEGER NOT NULL,
-    PRIMARY KEY (timeStamp, userId),
     FOREIGN KEY (userId) REFERENCES User(userId) ON DELETE CASCADE
 );
     ''');
@@ -112,7 +112,7 @@ class DatabaseHelper {
   }
 
   Future<List<StudySession>> getStudySessionWithinTime(
-    int userId,
+    String userId,
     DateTime start,
     DateTime end,
   ) async {
@@ -129,7 +129,7 @@ class DatabaseHelper {
     return maps.map((map) => StudySession.fromMap(map)).toList();
   }
 
-  Future<User?> getUserById(int userId) async {
+  Future<User?> getUserById(String userId) async {
     final db = await _instance!.database;
     final user = await db.query(
       'User',
@@ -143,7 +143,7 @@ class DatabaseHelper {
     }
   }
 
-  Future<List<ModelQuest>> getAllQuestsByUser(int userId) async {
+  Future<List<ModelQuest>> getAllQuestsByUser(String userId) async {
     final db = await _instance!.database;
     final maps = await db.rawQuery(
       '''
@@ -194,7 +194,7 @@ class DatabaseHelper {
     return await db.insert('User', user.toMap());
   }
 
-  Future<int> deleteUser(int userId) async {
+  Future<int> deleteUser(String userId) async {
     final db = await _instance!.database;
     return await db.delete('User', where: 'userId = ?', whereArgs: [userId]);
   }

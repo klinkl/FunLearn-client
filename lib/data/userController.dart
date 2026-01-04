@@ -10,7 +10,7 @@ class UserController {
   static UserController getInstance(DatabaseHelper helper) {
     return _instance ??= UserController._internal(helper);
   }
-  Future<User> getOrCreateUser(DatabaseHelper helper) async {
+  Future<User> getOrCreateUser() async {
     final users = await helper.getAllUsers();
     if (users.isNotEmpty) return users.first;
 

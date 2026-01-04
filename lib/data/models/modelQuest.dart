@@ -4,7 +4,7 @@ import 'package:uuid/uuid.dart';
 
 class ModelQuest {
   final String questId;
-  List<int> userIds;
+  final List<String> userIds;
   QuestType questType;
   DateTime? startDate;
   DateTime expiryDate;
@@ -43,7 +43,7 @@ class ModelQuest {
   factory ModelQuest.fromMap(Map<String, dynamic> map) {
     return ModelQuest(
       questId: map['questId'],
-      userIds: List<int>.from(jsonDecode(map['userIds'])),
+      userIds: List<String>.from(jsonDecode(map['userIds'])),
       questType: QuestType.values.byName(map['questType']),
       startDate: DateTime.fromMillisecondsSinceEpoch(
         map['startDate'],
