@@ -1,38 +1,127 @@
 import 'package:flutter/material.dart';
+import 'package:funlearn_client/data/userController.dart';
+import 'package:funlearn_client/data/questController.dart';
+import 'data/databaseHelper.dart';
+import 'screens/home.dart';
 import 'screens/cards_list_view.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
-void main() {
+import '../theme/customColors.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  final prefs = await SharedPreferences.getInstance();
+  final saved = prefs.getString('themeMode') ?? 'light';
   sqfliteFfiInit();
-  runApp(const MyApp());
+  initApplication();
+  runApp(MyApp(initialMode: _parseThemeMode(saved)));
+}
+void initApplication() async{
+  databaseFactory = databaseFactoryFfi;
+  final dbHelper = DatabaseHelper(dbPath: 'database.db');
+  //dbHelper.resetDatabase();
+  final userController = UserController.getInstance(dbHelper);
+  await userController.getOrCreateUser();
+  final questController = QuestController.getInstance(dbHelper);
+  await questController.createQuestsWhenOffline();
+}
+ThemeMode _parseThemeMode(String s) {
+  switch (s) {
+    case 'light':
+      return ThemeMode.light;
+    case 'dark':
+      return ThemeMode.dark;
+    default:
+      return ThemeMode.system;
+  }
 }
 
-class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+class MyApp extends StatefulWidget {
+  final ThemeMode initialMode;
+  const MyApp({super.key, required this.initialMode});
 
-  // This widget is the root of your application.
+  @override
+  State<MyApp> createState() => _MyAppState();
+}
+
+class _MyAppState extends State<MyApp> {
+  late ThemeMode _themeMode;
+
+  @override
+  void initState() {
+    super.initState();
+    _themeMode = widget.initialMode;
+  }
+
+  Future<void> _setThemeMode(ThemeMode mode) async {
+    setState(() => _themeMode = mode);
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(
+      'themeMode',
+      mode == ThemeMode.light
+          ? 'light'
+          : mode == ThemeMode.dark
+          ? 'dark'
+          : 'system',
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'FunLearn',
+      debugShowCheckedModeBanner: false,
       theme: ThemeData(
-        // This is the theme of your application.
-        //
-        // TRY THIS: Try running your application with "flutter run". You'll see
-        // the application has a purple toolbar. Then, without quitting the app,
-        // try changing the seedColor in the colorScheme below to Colors.green
-        // and then invoke "hot reload" (save your changes or press the "hot
-        // reload" button in a Flutter-supported IDE, or press "r" if you used
-        // the command line to start the app).
-        //
-        // Notice that the counter didn't reset back to zero; the application
-        // state is not lost during the reload. To reset the state, use hot
-        // restart instead.
-        //
-        // This works for code too, not just values: Most code changes can be
-        // tested with just a hot reload.
-        colorScheme: .fromSeed(seedColor: Colors.blue),
+        useMaterial3: true,
+        colorScheme: ColorScheme(
+          brightness: Brightness.light,
+          primary: Colors.lightBlue,
+          onPrimary: Colors.black,
+          secondary: Colors.white,
+          onSecondary: Colors.white,
+          surface: Colors.white,
+          onSurface: Colors.black,
+          error: Colors.red,
+          onError: Colors.white,
+        ),
+        floatingActionButtonTheme: FloatingActionButtonThemeData(
+          backgroundColor: Colors.white,
+        ),
+        extensions: [
+          const CustomColors(
+            card: Color.fromARGB(255, 204, 202, 202),
+            navigationBar: Colors.lightBlue,
+            navigationIcon: Colors.black,
+            addButton: Colors.white,
+          ),
+        ],
       ),
-      home: MyHomePage(title: '',),
+      darkTheme: ThemeData(
+        useMaterial3: true,
+        colorScheme: ColorScheme(
+          brightness: Brightness.dark,
+          primary: const Color(0xFF7C4DFF),
+          onPrimary: Colors.white,
+          secondary: const Color(0xFFFFC107),
+          onSecondary: Colors.black,
+          surface: const Color(0xFF121212),
+          onSurface: Colors.white,
+          error: Colors.red.shade400,
+          onError: Colors.black,
+        ),
+        floatingActionButtonTheme: FloatingActionButtonThemeData(
+          backgroundColor: Colors.black,
+        ),
+        extensions: [
+          const CustomColors(
+            card: Color(0xFF1E1E1E),
+            navigationBar: Color(0xFF7C4DFF),
+            navigationIcon: Colors.white,
+            addButton: Color(0xFF1E1E1E),
+          ),
+        ],
+      ),
+      themeMode: _themeMode,
+      home: HomeView(themeMode: _themeMode, onThemeModeChanged: _setThemeMode),
     );
   }
 }

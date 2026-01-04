@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import '../theme/customColors.dart';
+//temporary
+////////////////////////////////////////////////////////
 import 'package:fsrs/fsrs.dart' show Scheduler, Rating;
 import 'package:funlearn_client/data/models/deck.dart';
 import 'package:funlearn_client/data/models/flashcard.dart';
@@ -16,7 +19,6 @@ class MyFlashcardScreen extends StatelessWidget {
     return LearningView(deck: deck);
   }
 }
-
 class LearningView extends StatefulWidget {
   final Deck deck;
 
@@ -35,7 +37,7 @@ class _LearningViewState extends State<LearningView> {
 
   @override
   void initState() {
-    controller = LearningController(DatabaseHelper(dbPath: 'database.db'));
+    controller = LearningController.getInstance(DatabaseHelper(dbPath: 'database.db'));
     super.initState();
     _initDailySession();
   }
@@ -70,6 +72,8 @@ class _LearningViewState extends State<LearningView> {
 
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final customColors = Theme.of(context).extension<CustomColors>()!;
     if (_loading) {
       return Scaffold(
         appBar: AppBar(title: Text("Flashcard")),
@@ -111,9 +115,9 @@ class _LearningViewState extends State<LearningView> {
           width: MediaQuery.of(context).size.width * 0.8,
           height: MediaQuery.of(context).size.height * 0.7,
           decoration: BoxDecoration(
-            color: Colors.blueAccent,
+            color: customColors.card,
             borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: Colors.black, width: 2),
+            border: Border.all(color: cs.onPrimary, width: 2),
           ),
           child: Column(
             children: [
@@ -132,7 +136,7 @@ class _LearningViewState extends State<LearningView> {
                 maintainSize: true,
                 maintainAnimation: true,
                 maintainState: true,
-                child: Divider(thickness: 1, color: Colors.black),
+                child: Divider(thickness: 1, color: cs.onPrimary),
               ),
 
               Expanded(
@@ -157,69 +161,25 @@ class _LearningViewState extends State<LearningView> {
       bottomNavigationBar: _backShow
           ? Row(
               children: [
-                Expanded(
-                  child: SizedBox(
-                    height: MediaQuery.of(context).size.height * 0.1,
-                    child: TextButton(
-                      onPressed: () => _reviewCard(Rating.again),
-                      style: TextButton.styleFrom(
-                        backgroundColor: Colors.red,
-                        foregroundColor: Colors.black,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(0),
-                        ),
-                      ),
-                      child: Text("Again"),
-                    ),
-                  ),
+                FlashcardButton(
+                  label: 'Again',
+                  backgroundColor: Colors.red,
+                  onPressed: () => _reviewCard(Rating.again),
                 ),
-                Expanded(
-                  child: SizedBox(
-                    height: MediaQuery.of(context).size.height * 0.1,
-                    child: TextButton(
-                      onPressed: () => _reviewCard(Rating.hard),
-                      style: TextButton.styleFrom(
-                        backgroundColor: Colors.orange,
-                        foregroundColor: Colors.black,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(0),
-                        ),
-                      ),
-                      child: Text("Hard"),
-                    ),
-                  ),
+                FlashcardButton(
+                  label: 'Hard',
+                  backgroundColor: Colors.orange,
+                  onPressed: () => _reviewCard(Rating.hard),
                 ),
-                Expanded(
-                  child: SizedBox(
-                    height: MediaQuery.of(context).size.height * 0.1,
-                    child: TextButton(
-                      onPressed: () => _reviewCard(Rating.good),
-                      style: TextButton.styleFrom(
-                        backgroundColor: Colors.lightGreen,
-                        foregroundColor: Colors.black,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(0),
-                        ),
-                      ),
-                      child: Text("Okay"),
-                    ),
-                  ),
+                FlashcardButton(
+                  label: 'Okay',
+                  backgroundColor: Colors.green,
+                  onPressed: () => _reviewCard(Rating.good),
                 ),
-                Expanded(
-                  child: SizedBox(
-                    height: MediaQuery.of(context).size.height * 0.1,
-                    child: TextButton(
-                      onPressed: () => _reviewCard(Rating.easy),
-                      style: TextButton.styleFrom(
-                        backgroundColor: Colors.green,
-                        foregroundColor: Colors.black,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(0),
-                        ),
-                      ),
-                      child: Text("Easy"),
-                    ),
-                  ),
+                FlashcardButton(
+                  label: 'Easy',
+                  backgroundColor: Colors.blue,
+                  onPressed: () => _reviewCard(Rating.easy),
                 ),
               ],
             )
@@ -229,8 +189,8 @@ class _LearningViewState extends State<LearningView> {
               child: TextButton(
                 onPressed: _show,
                 style: TextButton.styleFrom(
-                  backgroundColor: Colors.black,
-                  foregroundColor: Colors.white,
+                  backgroundColor: customColors.navigationBar,
+                  foregroundColor: cs.onSurface,
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(0),
                   ),
@@ -238,6 +198,39 @@ class _LearningViewState extends State<LearningView> {
                 child: Text("Show the back"),
               ),
             ),
+    );
+  }
+}
+
+class FlashcardButton extends StatelessWidget {
+  final String label;
+  final Color backgroundColor;
+  final VoidCallback onPressed;
+
+  const FlashcardButton({
+    super.key,
+    required this.label,
+    required this.backgroundColor,
+    required this.onPressed,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Expanded(
+      child: SizedBox(
+        height: MediaQuery.of(context).size.height * 0.1,
+        child: TextButton(
+          onPressed: onPressed,
+          style: TextButton.styleFrom(
+            backgroundColor: backgroundColor,
+            foregroundColor: Colors.black,
+            shape: const RoundedRectangleBorder(
+              borderRadius: BorderRadius.zero,
+            ),
+          ),
+          child: Text(label),
+        ),
+      ),
     );
   }
 }

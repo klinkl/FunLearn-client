@@ -2,16 +2,26 @@ import 'package:fsrs/fsrs.dart';
 import 'package:funlearn_client/data/databaseHelper.dart';
 import 'package:funlearn_client/data/models/flashcard.dart';
 import 'package:funlearn_client/data/models/deck.dart';
+import 'package:funlearn_client/data/questController.dart';
+import 'package:funlearn_client/data/studySessionController.dart';
 
 class LearningController {
+  static LearningController? _instance;
   final DatabaseHelper helper;
   final scheduler = Scheduler(
     learningSteps: [Duration(milliseconds: 0), Duration(milliseconds: 0)],
     relearningSteps: [Duration(milliseconds: 0)],
   );
-
-  LearningController(this.helper);
-
+  late final StudySessionController studySessionController;
+  late final QuestController questController;
+  LearningController._internal(this.helper) {
+    studySessionController = StudySessionController.getInstance(helper);
+    studySessionController.init();
+    questController = QuestController.getInstance(helper);
+  }
+  static LearningController getInstance(DatabaseHelper helper) {
+    return _instance ??= LearningController._internal(helper);
+  }
   Future<Flashcard?> getNextCard(int deckId) async {
     final dueCards = await helper.fetchDueCards(deckId);
     return dueCards.isNotEmpty ? dueCards.first : null;
@@ -36,6 +46,10 @@ class LearningController {
     //print(updatedCard.toMap());
     //print(timeDelta);
     await helper.updateCard(updatedCard);
+
+    final (lastStudy, session) = await studySessionController.createSession(rating);
+
+    await questController.updateQuestsWithStudySession(session, lastStudy);
   }
 
   Future<void> scheduleNewCardsOnDemand(int deckId, int amount) async {
@@ -98,9 +112,9 @@ class LearningController {
     final last = deck.lastNewCardsRelease;
     final alreadyRanToday =
         last != null &&
-        last.year == now.year &&
-        last.month == now.month &&
-        last.day == now.day;
+            last.year == now.year &&
+            last.month == now.month &&
+            last.day == now.day;
     if (!alreadyRanToday) {
       await scheduleNewCards(deckId);
       await helper.updateDeck(

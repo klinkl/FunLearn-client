@@ -6,6 +6,8 @@ import 'package:funlearn_client/data/databaseHelper.dart';
 import 'package:funlearn_client/data/learningController.dart';
 import 'package:funlearn_client/data/models/deck.dart';
 import 'package:funlearn_client/data/models/flashcard.dart';
+import 'package:funlearn_client/data/models/user.dart';
+import 'package:funlearn_client/data/studySessionController.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 
 import 'apkgImport_test.dart';
@@ -21,7 +23,12 @@ void main() {
   setUp(() async {
     dbHelper = DatabaseHelper(dbPath: path);
     await dbHelper.resetDatabase();
-    controller = LearningController(DatabaseHelper(dbPath: path));
+
+    final user = User();
+    await dbHelper.insertUser(user);
+    controller = LearningController.getInstance(DatabaseHelper(dbPath: path));
+    final sessionController = StudySessionController.getInstance(dbHelper);
+    sessionController.setUserIdForTest(user.userId);
   });
   tearDown(() async {
     await dbHelper.resetDatabase();
