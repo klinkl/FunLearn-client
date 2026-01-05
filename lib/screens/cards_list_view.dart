@@ -55,8 +55,6 @@ class _CardsListViewState extends State<CardsListView> {
   @override
   void initState() {
     super.initState();
-    sqfliteFfiInit();
-    databaseFactory = databaseFactoryFfi;
     //dbHelper.resetDatabase();
     _loadDecks();
     _loadUser();

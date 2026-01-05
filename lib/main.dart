@@ -1,3 +1,6 @@
+import 'dart:io';
+
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:funlearn_client/data/userController.dart';
 import 'package:funlearn_client/data/questController.dart';
@@ -12,12 +15,14 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   final prefs = await SharedPreferences.getInstance();
   final saved = prefs.getString('themeMode') ?? 'light';
-  sqfliteFfiInit();
+  if (!kIsWeb && (Platform.isWindows || Platform.isLinux || Platform.isMacOS)) {
+    sqfliteFfiInit();
+    databaseFactory = databaseFactoryFfi;
+  }
   initApplication();
   runApp(MyApp(initialMode: _parseThemeMode(saved)));
 }
 void initApplication() async{
-  databaseFactory = databaseFactoryFfi;
   final dbHelper = DatabaseHelper(dbPath: 'database.db');
   //dbHelper.resetDatabase();
   final userController = UserController.getInstance(dbHelper);
