@@ -1,7 +1,6 @@
 import 'databaseHelper.dart';
 import 'models/studySession.dart';
 import 'models/user.dart';
-import './serverApi/apiClient.dart';
 import './serverApi/usersApi.dart';
 
 class UserController {
@@ -80,19 +79,27 @@ class UserController {
     StudySession studySession,
   ) async {
     final user = await helper.getUserById(studySession.userId);
+    if (user == null) throw Exception('User not found locally');
+
     final (newLevel, xpTowardsNextLevel) = calculateLevel(studySession, user!);
-    await helper.updateUser(
-      User(
-        username: user.username,
-        userId: user.userId,
-        currentStreak: calculateStreak(user.lastStudyDate, user.currentStreak),
-        lastStudyDate: studySession.timeStamp,
-        totalXP: user.totalXP + studySession.xp,
-        totalCardsLearned: user.totalCardsLearned + studySession.cardsLearnt,
-        level: newLevel,
-        xpToNextLevel: xpTowardsNextLevel,
-      ),
+
+    final updatedUser = User(
+      username: user.username,
+      userId: user.userId,
+      currentStreak: calculateStreak(user.lastStudyDate, user.currentStreak),
+      lastStudyDate: studySession.timeStamp,
+      totalXP: user.totalXP + studySession.xp,
+      totalCardsLearned: user.totalCardsLearned + studySession.cardsLearnt,
+      level: newLevel,
+      xpToNextLevel: xpTowardsNextLevel,
     );
+
+    await helper.upsertUser(updatedUser);
+
+    try {
+      await usersApi.updateUser(updatedUser);
+    } catch (_) {}
+
     return user.lastStudyDate;
   }
 }

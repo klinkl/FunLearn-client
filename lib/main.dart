@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:funlearn_client/data/serverApi/studySessionApi.dart';
 import 'package:funlearn_client/data/userController.dart';
 import 'package:funlearn_client/data/questController.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -10,12 +11,25 @@ import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 import 'data/databaseHelper.dart';
 import './data/serverApi/apiClient.dart';
 import './data/serverApi/usersApi.dart';
+import './data/learningController.dart';
 
 import 'screens/home.dart';
 import '../theme/customColors.dart';
 
 //testing
 import 'screens/test_view.dart';
+
+class AppDeps {
+  final DatabaseHelper dbHelper;
+  final UserController userController;
+  final LearningController learningController;
+
+  AppDeps({
+    required this.dbHelper,
+    required this.userController,
+    required this.learningController,
+  });
+}
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -27,33 +41,35 @@ void main() async {
     sqfliteFfiInit();
     databaseFactory = databaseFactoryFfi;
   }
-  final dbHelper = await initApplication();
+  final deps = await initApplication();
 
-  runApp(MyApp(initialMode: _parseThemeMode(saved), dbHelper: dbHelper));
+  runApp(MyApp(initialMode: _parseThemeMode(saved), deps: deps));
 }
 
-Future<DatabaseHelper> initApplication() async {
+Future<AppDeps> initApplication() async {
   final dbHelper = DatabaseHelper(dbPath: 'database.db');
   //dbHelper.resetDatabase();
   final apiClient = ApiClient(baseUrl: 'http://localhost:8080');
   final usersApi = UsersApi(apiClient.dio);
+  final studySessionApi = StudySessionApi(apiClient.dio);
 
   final userController = UserController.getInstance(dbHelper, usersApi);
   await userController.getOrCreateUser();
 
-  /////// delete after testing
-  final users = await dbHelper.getAllUsers();
-  debugPrint(
-    "LOCAL USER AFTER SYNC: ${users.first.username} / ${users.first.userId}",
+  final questController = QuestController.getInstance(dbHelper);
+  await questController.createQuestsWhenOffline();
+
+  final controller = LearningController.getInstance(
+    dbHelper,
+    userController,
+    studySessionApi,
   );
-  ///////
 
-  //put back after testing
-
-  //final questController = QuestController.getInstance(dbHelper);
-  //await questController.createQuestsWhenOffline();
-
-  return dbHelper;
+  return AppDeps(
+    dbHelper: dbHelper,
+    userController: userController,
+    learningController: controller,
+  );
 }
 
 ThemeMode _parseThemeMode(String s) {
@@ -69,8 +85,8 @@ ThemeMode _parseThemeMode(String s) {
 
 class MyApp extends StatefulWidget {
   final ThemeMode initialMode;
-  final DatabaseHelper dbHelper;
-  const MyApp({super.key, required this.initialMode, required this.dbHelper});
+  final AppDeps deps;
+  const MyApp({super.key, required this.initialMode, required this.deps});
 
   @override
   State<MyApp> createState() => _MyAppState();
@@ -153,8 +169,14 @@ class _MyAppState extends State<MyApp> {
         ],
       ),
       themeMode: _themeMode,
-      //home: HomeView(themeMode: _themeMode, onThemeModeChanged: _setThemeMode),
-      home: ApiTestScreen(),
+      home: HomeView(
+        themeMode: _themeMode,
+        onThemeModeChanged: _setThemeMode,
+        dbHelper: widget.deps.dbHelper,
+        learningController: widget.deps.learningController,
+      ),
+
+      //home: ApiTestScreen(), //testing
     );
   }
 }

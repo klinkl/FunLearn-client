@@ -37,4 +37,24 @@ class StudySession {
       userId: map['userId'],
     );
   }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'studySessionId': studySessionId,
+      'timeStamp': timeStamp.toUtc().toIso8601String(),
+      'xp': xp,
+      'cardsLearnt': cardsLearnt,
+      'userId': userId,
+    };
+  }
+
+  factory StudySession.fromJson(Map<String, dynamic> json) {
+    return StudySession(
+      studySessionId: json['studySessionId'],
+      timeStamp: DateTime.parse(json['timestamp']).toUtc(),
+      xp: json['xp'],
+      cardsLearnt: json['cardsLearnt'],
+      userId: json['userId'],
+    );
+  }
 }

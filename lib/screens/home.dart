@@ -6,14 +6,21 @@ import 'leaderboard_view.dart';
 import 'setting_view.dart';
 import '../widgets/navigation_bar.dart';
 
+import '../data/databaseHelper.dart';
+import '../data/learningController.dart';
+
 class HomeView extends StatefulWidget {
   final ThemeMode themeMode;
   final ValueChanged<ThemeMode> onThemeModeChanged;
+  final DatabaseHelper dbHelper;
+  final LearningController learningController;
 
   const HomeView({
     super.key,
     required this.themeMode,
     required this.onThemeModeChanged,
+    required this.dbHelper,
+    required this.learningController,
   });
 
   @override
@@ -32,6 +39,8 @@ class _HomeViewState extends State<HomeView> {
       CardsListView(
         themeMode: widget.themeMode,
         onThemeModeChanged: widget.onThemeModeChanged,
+        dbHelper: widget.dbHelper,
+        learningController: widget.learningController,
       ),
       QuestView(
         themeMode: widget.themeMode,

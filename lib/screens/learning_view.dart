@@ -10,19 +10,30 @@ import '../data/learningController.dart';
 import '../data/databaseHelper.dart';
 
 class MyFlashcardScreen extends StatelessWidget {
-  const MyFlashcardScreen({super.key, required this.deck});
+  const MyFlashcardScreen({
+    super.key,
+    required this.deck,
+    required this.learningController,
+  });
 
   final Deck deck;
+  final LearningController learningController;
 
   @override
   Widget build(BuildContext context) {
-    return LearningView(deck: deck);
+    return LearningView(deck: deck, learningController: learningController);
   }
 }
+
 class LearningView extends StatefulWidget {
   final Deck deck;
+  final LearningController learningController;
 
-  const LearningView({super.key, required this.deck});
+  const LearningView({
+    super.key,
+    required this.deck,
+    required this.learningController,
+  });
 
   @override
   State<LearningView> createState() => _LearningViewState();
@@ -32,24 +43,24 @@ class _LearningViewState extends State<LearningView> {
   Flashcard? _currentCard;
   bool _backShow = false;
   bool _loading = true;
-  late final LearningController controller;
+  late final LearningController learningController;
   late final Future<void> _initFuture;
 
   @override
   void initState() {
-    controller = LearningController.getInstance(DatabaseHelper(dbPath: 'database.db'));
     super.initState();
+    learningController = widget.learningController;
     _initDailySession();
   }
 
   Future<void> _initDailySession() async {
-    await controller.runDailyNewCardRelease(widget.deck.deckId!);
+    await learningController.runDailyNewCardRelease(widget.deck.deckId!);
     await _loadNextCard();
   }
 
   Future<void> _loadNextCard() async {
     setState(() => _loading = true);
-    final nextCard = await controller.getNextCard(widget.deck.deckId!);
+    final nextCard = await learningController.getNextCard(widget.deck.deckId!);
     setState(() {
       _currentCard = nextCard;
       _backShow = false;
@@ -59,7 +70,7 @@ class _LearningViewState extends State<LearningView> {
 
   Future<void> _reviewCard(Rating rating) async {
     if (_currentCard != null) {
-      await controller.reviewCard(_currentCard!, rating);
+      await learningController.reviewCard(_currentCard!, rating);
       await _loadNextCard();
     }
   }
@@ -92,7 +103,7 @@ class _LearningViewState extends State<LearningView> {
               const SizedBox(height: 16),
               ElevatedButton(
                 onPressed: () async {
-                  await controller.scheduleNewCardsOnDemand(
+                  await learningController.scheduleNewCardsOnDemand(
                     widget.deck.deckId!,
                     5,
                   );

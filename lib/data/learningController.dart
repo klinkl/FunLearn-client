@@ -2,25 +2,50 @@ import 'package:fsrs/fsrs.dart';
 import 'package:funlearn_client/data/databaseHelper.dart';
 import 'package:funlearn_client/data/models/flashcard.dart';
 import 'package:funlearn_client/data/models/deck.dart';
+import 'package:funlearn_client/data/models/user.dart';
 import 'package:funlearn_client/data/questController.dart';
+import 'package:funlearn_client/data/serverApi/studySessionApi.dart';
 import 'package:funlearn_client/data/studySessionController.dart';
+import 'package:funlearn_client/data/userController.dart';
 
 class LearningController {
   static LearningController? _instance;
   final DatabaseHelper helper;
+  final UserController userController;
+  final StudySessionApi studySessionApi;
+
+  late final StudySessionController studySessionController;
+  late final QuestController questController;
+
   final scheduler = Scheduler(
     learningSteps: [Duration(milliseconds: 0), Duration(milliseconds: 0)],
     relearningSteps: [Duration(milliseconds: 0)],
   );
-  late final StudySessionController studySessionController;
-  late final QuestController questController;
-  LearningController._internal(this.helper) {
-    studySessionController = StudySessionController.getInstance(helper);
+
+  LearningController._internal(
+    this.helper,
+    this.userController,
+    this.studySessionApi,
+  ) {
+    studySessionController = StudySessionController.getInstance(
+      helper,
+      userController,
+      studySessionApi,
+    );
     studySessionController.init();
     questController = QuestController.getInstance(helper);
   }
-  static LearningController getInstance(DatabaseHelper helper) {
-    return _instance ??= LearningController._internal(helper);
+
+  static LearningController getInstance(
+    DatabaseHelper helper,
+    UserController userController,
+    StudySessionApi studySessionApi,
+  ) {
+    return _instance ??= LearningController._internal(
+      helper,
+      userController,
+      studySessionApi,
+    );
   }
 
   Future<Flashcard?> getNextCard(int deckId) async {

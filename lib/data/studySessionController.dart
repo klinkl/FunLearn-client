@@ -5,22 +5,38 @@ import 'package:funlearn_client/data/questController.dart';
 
 import 'databaseHelper.dart';
 import 'models/studySession.dart';
+import 'userController.dart';
+import './serverApi/studySessionApi.dart';
 
 class StudySessionController {
   static StudySessionController? _instance;
   final DatabaseHelper helper;
+  final UserController userController;
+  final StudySessionApi studySessionApi;
+
   late String userId;
-  late final UserController userController;
-  StudySessionController._internal(this.helper);
-  static StudySessionController getInstance(DatabaseHelper helper) {
-    return _instance ??= StudySessionController._internal(helper);
+  StudySessionController._internal(
+    this.helper,
+    this.userController,
+    this.studySessionApi,
+  );
+
+  static StudySessionController getInstance(
+    DatabaseHelper helper,
+    UserController userController,
+    StudySessionApi studySessionApi,
+  ) {
+    return _instance ??= StudySessionController._internal(
+      helper,
+      userController,
+      studySessionApi,
+    );
   }
 
   Future<void> init() async {
     final users = await helper.getAllUsers();
     if (users.isEmpty) throw Exception('No users found');
     userId = users.first.userId!;
-    //userController = UserController.getInstance(helper); //put it back after testing, users client server com
   }
 
   int xpFromRating(Rating rating) {
@@ -52,13 +68,19 @@ class StudySessionController {
   Future<(DateTime?, StudySession)> createSession(Rating rating) async {
     final xp = xpFromRating(rating);
     final cardsLearnt = cardsLearnedFromRating(rating);
+
     final session = StudySession(
       userId: userId,
       xp: xp,
       cardsLearnt: cardsLearnt,
       timeStamp: DateTime.now().toUtc(),
     );
+
     await helper.insertStudySession(session);
+    try {
+      await studySessionApi.createStudySession(session);
+    } catch (_) {}
+
     final lastStudy = await userController.updateUserWithStudySession(session);
     return (lastStudy, session);
   }
