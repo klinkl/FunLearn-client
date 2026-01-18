@@ -4,35 +4,56 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:funlearn_client/data/userController.dart';
 import 'package:funlearn_client/data/questController.dart';
-import 'data/databaseHelper.dart';
-import 'screens/home.dart';
-import 'screens/cards_list_view.dart';
-import 'package:sqflite_common_ffi/sqflite_ffi.dart';
-import '../theme/customColors.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:sqflite_common_ffi/sqflite_ffi.dart';
+
+import 'data/databaseHelper.dart';
+import './data/serverApi/apiClient.dart';
+import './data/serverApi/usersApi.dart';
+
+import 'screens/home.dart';
+import '../theme/customColors.dart';
 
 //testing
 import 'screens/test_view.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
   final prefs = await SharedPreferences.getInstance();
   final saved = prefs.getString('themeMode') ?? 'light';
+
   if (!kIsWeb && (Platform.isWindows || Platform.isLinux || Platform.isMacOS)) {
     sqfliteFfiInit();
     databaseFactory = databaseFactoryFfi;
   }
-  initApplication();
-  runApp(MyApp(initialMode: _parseThemeMode(saved)));
+  final dbHelper = await initApplication();
+
+  runApp(MyApp(initialMode: _parseThemeMode(saved), dbHelper: dbHelper));
 }
 
-void initApplication() async {
+Future<DatabaseHelper> initApplication() async {
   final dbHelper = DatabaseHelper(dbPath: 'database.db');
   //dbHelper.resetDatabase();
-  final userController = UserController.getInstance(dbHelper);
+  final apiClient = ApiClient(baseUrl: 'http://localhost:8080');
+  final usersApi = UsersApi(apiClient.dio);
+
+  final userController = UserController.getInstance(dbHelper, usersApi);
   await userController.getOrCreateUser();
-  final questController = QuestController.getInstance(dbHelper);
-  await questController.createQuestsWhenOffline();
+
+  /////// delete after testing
+  final users = await dbHelper.getAllUsers();
+  debugPrint(
+    "LOCAL USER AFTER SYNC: ${users.first.username} / ${users.first.userId}",
+  );
+  ///////
+
+  //put back after testing
+
+  //final questController = QuestController.getInstance(dbHelper);
+  //await questController.createQuestsWhenOffline();
+
+  return dbHelper;
 }
 
 ThemeMode _parseThemeMode(String s) {
@@ -48,7 +69,8 @@ ThemeMode _parseThemeMode(String s) {
 
 class MyApp extends StatefulWidget {
   final ThemeMode initialMode;
-  const MyApp({super.key, required this.initialMode});
+  final DatabaseHelper dbHelper;
+  const MyApp({super.key, required this.initialMode, required this.dbHelper});
 
   @override
   State<MyApp> createState() => _MyAppState();

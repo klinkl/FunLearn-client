@@ -22,6 +22,7 @@ class LearningController {
   static LearningController getInstance(DatabaseHelper helper) {
     return _instance ??= LearningController._internal(helper);
   }
+
   Future<Flashcard?> getNextCard(int deckId) async {
     final dueCards = await helper.fetchDueCards(deckId);
     return dueCards.isNotEmpty ? dueCards.first : null;
@@ -47,7 +48,9 @@ class LearningController {
     //print(timeDelta);
     await helper.updateCard(updatedCard);
 
-    final (lastStudy, session) = await studySessionController.createSession(rating);
+    final (lastStudy, session) = await studySessionController.createSession(
+      rating,
+    );
 
     await questController.updateQuestsWithStudySession(session, lastStudy);
   }
@@ -112,9 +115,9 @@ class LearningController {
     final last = deck.lastNewCardsRelease;
     final alreadyRanToday =
         last != null &&
-            last.year == now.year &&
-            last.month == now.month &&
-            last.day == now.day;
+        last.year == now.year &&
+        last.month == now.month &&
+        last.day == now.day;
     if (!alreadyRanToday) {
       await scheduleNewCards(deckId);
       await helper.updateDeck(

@@ -15,11 +15,12 @@ class StudySessionController {
   static StudySessionController getInstance(DatabaseHelper helper) {
     return _instance ??= StudySessionController._internal(helper);
   }
+
   Future<void> init() async {
     final users = await helper.getAllUsers();
     if (users.isEmpty) throw Exception('No users found');
     userId = users.first.userId!;
-    userController = UserController.getInstance(helper);
+    //userController = UserController.getInstance(helper); //put it back after testing, users client server com
   }
 
   int xpFromRating(Rating rating) {
@@ -66,5 +67,4 @@ class StudySessionController {
   void setUserIdForTest(String id) {
     userId = id;
   }
-
 }

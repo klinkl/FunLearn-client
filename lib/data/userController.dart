@@ -1,18 +1,36 @@
 import 'databaseHelper.dart';
 import 'models/studySession.dart';
 import 'models/user.dart';
+import './serverApi/apiClient.dart';
+import './serverApi/usersApi.dart';
 
 class UserController {
   static UserController? _instance;
   final DatabaseHelper helper;
+  final UsersApi usersApi;
 
-  UserController._internal(this.helper);
-  static UserController getInstance(DatabaseHelper helper) {
-    return _instance ??= UserController._internal(helper);
+  UserController._internal(this.helper, this.usersApi);
+  static UserController getInstance(DatabaseHelper helper, UsersApi usersApi) {
+    return _instance ??= UserController._internal(helper, usersApi);
   }
+
   Future<User> getOrCreateUser() async {
     final users = await helper.getAllUsers();
-    if (users.isNotEmpty) return users.first;
+    //if local user exist -> try to get server version
+    if (users.isNotEmpty) {
+      final localUser = users.first;
+
+      try {
+        final remoteUser = await usersApi.getUserById(localUser.userId);
+        await helper.upsertUser(remoteUser);
+        return remoteUser;
+      } catch (e) {
+        try {
+          await usersApi.createUser(localUser);
+        } catch (_) {}
+        return localUser;
+      }
+    }
 
     final newUser = User(
       username: 'User',
@@ -23,6 +41,11 @@ class UserController {
     );
 
     await helper.insertUser(newUser);
+
+    // try to create it on the server
+    try {
+      await usersApi.createUser(newUser);
+    } catch (_) {}
 
     return newUser;
   }
@@ -53,7 +76,9 @@ class UserController {
     return (level, xpNeeded);
   }
 
-  Future<DateTime?> updateUserWithStudySession(StudySession studySession) async {
+  Future<DateTime?> updateUserWithStudySession(
+    StudySession studySession,
+  ) async {
     final user = await helper.getUserById(studySession.userId);
     final (newLevel, xpTowardsNextLevel) = calculateLevel(studySession, user!);
     await helper.updateUser(

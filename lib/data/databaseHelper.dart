@@ -170,7 +170,11 @@ class DatabaseHelper {
 
   Future<int> deleteQuest(String questId) async {
     final db = await _instance!.database;
-    return await db.delete('ModelQuest', where: 'questId = ?', whereArgs: [questId]);
+    return await db.delete(
+      'ModelQuest',
+      where: 'questId = ?',
+      whereArgs: [questId],
+    );
   }
 
   Future<int> updateQuest(ModelQuest quest) async {
@@ -206,6 +210,16 @@ class DatabaseHelper {
       user.toMap(),
       where: 'userId = ?',
       whereArgs: [user.userId],
+    );
+  }
+
+  //insert user if it doesn't exist or update it
+  Future<void> upsertUser(User user) async {
+    final db = await _instance!.database;
+    await db.insert(
+      'User',
+      user.toMap(),
+      conflictAlgorithm: ConflictAlgorithm.replace,
     );
   }
 
