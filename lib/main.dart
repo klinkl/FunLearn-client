@@ -11,6 +11,9 @@ import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 import '../theme/customColors.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+//testing
+import 'screens/test_view.dart';
+
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   final prefs = await SharedPreferences.getInstance();
@@ -22,7 +25,8 @@ void main() async {
   initApplication();
   runApp(MyApp(initialMode: _parseThemeMode(saved)));
 }
-void initApplication() async{
+
+void initApplication() async {
   final dbHelper = DatabaseHelper(dbPath: 'database.db');
   //dbHelper.resetDatabase();
   final userController = UserController.getInstance(dbHelper);
@@ -30,6 +34,7 @@ void initApplication() async{
   final questController = QuestController.getInstance(dbHelper);
   await questController.createQuestsWhenOffline();
 }
+
 ThemeMode _parseThemeMode(String s) {
   switch (s) {
     case 'light':
@@ -126,7 +131,8 @@ class _MyAppState extends State<MyApp> {
         ],
       ),
       themeMode: _themeMode,
-      home: HomeView(themeMode: _themeMode, onThemeModeChanged: _setThemeMode),
+      //home: HomeView(themeMode: _themeMode, onThemeModeChanged: _setThemeMode),
+      home: ApiTestScreen(),
     );
   }
 }
