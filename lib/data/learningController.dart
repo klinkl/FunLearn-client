@@ -1,27 +1,57 @@
 import 'package:fsrs/fsrs.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:funlearn_client/data/databaseHelper.dart';
 import 'package:funlearn_client/data/models/flashcard.dart';
 import 'package:funlearn_client/data/models/deck.dart';
+import 'package:funlearn_client/data/models/user.dart';
 import 'package:funlearn_client/data/questController.dart';
+import 'package:funlearn_client/data/serverApi/studySessionApi.dart';
 import 'package:funlearn_client/data/studySessionController.dart';
+import 'package:funlearn_client/data/userController.dart';
 
 class LearningController {
   static LearningController? _instance;
   final DatabaseHelper helper;
+  final UserController userController;
+  final IStudySessionApi studySessionApi;
+
+  late final StudySessionController studySessionController;
+  late final QuestController questController;
+
   final scheduler = Scheduler(
     learningSteps: [Duration(milliseconds: 0), Duration(milliseconds: 0)],
     relearningSteps: [Duration(milliseconds: 0)],
   );
-  late final StudySessionController studySessionController;
-  late final QuestController questController;
-  LearningController._internal(this.helper) {
-    studySessionController = StudySessionController.getInstance(helper);
-    studySessionController.init();
+
+  LearningController._internal(
+    this.helper,
+    this.userController,
+    this.studySessionApi,
+  ) {
+    studySessionController = StudySessionController.getInstance(
+      helper,
+      userController,
+      studySessionApi,
+    );
     questController = QuestController.getInstance(helper);
   }
-  static LearningController getInstance(DatabaseHelper helper) {
-    return _instance ??= LearningController._internal(helper);
+
+  static LearningController getInstance(
+    DatabaseHelper helper,
+    UserController userController,
+    IStudySessionApi studySessionApi,
+  ) {
+    return _instance ??= LearningController._internal(
+      helper,
+      userController,
+      studySessionApi,
+    );
   }
+
+  Future<void> init() async {
+    await studySessionController.init();
+  }
+
   Future<Flashcard?> getNextCard(int deckId) async {
     final dueCards = await helper.fetchDueCards(deckId);
     return dueCards.isNotEmpty ? dueCards.first : null;
@@ -47,7 +77,9 @@ class LearningController {
     //print(timeDelta);
     await helper.updateCard(updatedCard);
 
-    final (lastStudy, session) = await studySessionController.createSession(rating);
+    final (lastStudy, session) = await studySessionController.createSession(
+      rating,
+    );
 
     await questController.updateQuestsWithStudySession(session, lastStudy);
   }
@@ -112,9 +144,9 @@ class LearningController {
     final last = deck.lastNewCardsRelease;
     final alreadyRanToday =
         last != null &&
-            last.year == now.year &&
-            last.month == now.month &&
-            last.day == now.day;
+        last.year == now.year &&
+        last.month == now.month &&
+        last.day == now.day;
     if (!alreadyRanToday) {
       await scheduleNewCards(deckId);
       await helper.updateDeck(
@@ -126,5 +158,10 @@ class LearningController {
         ),
       );
     }
+  }
+
+  @visibleForTesting
+  static void resetInstanceForTest() {
+    _instance = null;
   }
 }

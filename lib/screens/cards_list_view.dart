@@ -1,31 +1,39 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import '../data/models/user.dart';
+import 'package:funlearn_client/data/apkgImport/ankiDbWriter.dart';
+import 'package:funlearn_client/data/learningController.dart';
+import 'package:funlearn_client/data/userController.dart';
+import 'package:funlearn_client/screens/learning_view.dart';
+import 'package:sqflite_common_ffi/sqflite_ffi.dart';
+import 'package:flutter_expandable_fab/flutter_expandable_fab.dart';
+
 import '../theme/customColors.dart';
 import './card_creation_view.dart';
+
 import '../widgets/user_info.dart';
 import '../widgets/sample_card.dart';
-import 'package:funlearn_client/data/apkgImport/ankiDbWriter.dart';
-import 'package:funlearn_client/screens/learning_view.dart';
 
+import '../data/models/user.dart';
 import '../data/apkgImport/ankiDbReader.dart';
 import '../data/apkgImport/apkgExtractor.dart';
 import '../data/apkgImport/apkgImportService.dart';
 import '../data/apkgImport/apkgSource.dart';
 import '../data/databaseHelper.dart';
 import '../data/models/deck.dart';
-import 'package:sqflite_common_ffi/sqflite_ffi.dart';
-import 'package:flutter_expandable_fab/flutter_expandable_fab.dart';
 
 class CardsListView extends StatefulWidget {
   const CardsListView({
     super.key,
     required this.themeMode,
     required this.onThemeModeChanged,
+    required this.dbHelper,
+    required this.learningController,
   });
 
   final ThemeMode themeMode;
   final ValueChanged<ThemeMode> onThemeModeChanged;
+  final DatabaseHelper dbHelper;
+  final LearningController learningController;
 
   @override
   State<CardsListView> createState() => _CardsListViewState();
@@ -35,14 +43,13 @@ class _CardsListViewState extends State<CardsListView> {
   int _selectedIndex = 0;
 
   void _onItemTapped(int index) => setState(() => _selectedIndex = index);
-  final dbHelper = DatabaseHelper(dbPath: 'database.db');
   List<Deck> decks = [];
   User user = User();
   late final ApkgImportService importService = ApkgImportService(
     source: FilePickerApkgSource(),
     extractor: ApkgExtractor(),
     reader: AnkiDbReader(),
-    writer: AnkiDbWriter(dbHelper),
+    writer: AnkiDbWriter(widget.dbHelper),
   );
 
   Future<void> addNewDeck() async {
@@ -55,20 +62,22 @@ class _CardsListViewState extends State<CardsListView> {
   @override
   void initState() {
     super.initState();
-    //dbHelper.resetDatabase();
+    //widget.dbHelper.resetDatabase();
     _loadDecks();
     _loadUser();
   }
-  Future<void> _loadUser() async{
-    final users = await dbHelper.getAllUsers();
+
+  Future<void> _loadUser() async {
+    final users = await widget.dbHelper.getAllUsers();
     setState(() {
       if (users.isNotEmpty) {
         user = users.first;
       }
     });
   }
+
   Future<void> _loadDecks() async {
-    final fetchedDecks = await dbHelper.getDecks();
+    final fetchedDecks = await widget.dbHelper.getDecks();
     if (kDebugMode) {
       print(fetchedDecks.length);
     }
@@ -79,106 +88,105 @@ class _CardsListViewState extends State<CardsListView> {
 
   @override
   Widget build(BuildContext context) {
-    final cs = Theme
-        .of(context)
-        .colorScheme;
+    final cs = Theme.of(context).colorScheme;
     final customColors = Theme.of(context).extension<CustomColors>()!;
-    final width = MediaQuery
-        .of(context)
-        .size
-        .width;
+    final width = MediaQuery.of(context).size.width;
     final crossAxisCount = width > 1000 ? 3 : 2;
 
     return Scaffold(
-        body: SafeArea(
-          child: Column(
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-              const SizedBox(height: 32),
+      body: SafeArea(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            const SizedBox(height: 32),
 
-          Userinfo(
-            profilPicture: 'assets/images/default_pfp.png',
-            userName: user.username,
-            exp: user.totalXP,
-            expNextLevel: user.xpToNextLevel,
-            level: user.level,
-            streak: user.currentStreak,
-          ),
-          const SizedBox(height: 24),
-          Expanded(
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20),
-              child: GridView.builder(
-                itemCount: decks.length,
-                gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                  crossAxisCount: crossAxisCount,
-                  crossAxisSpacing: width / 80,
-                  mainAxisSpacing: width / 80,
-                  childAspectRatio: 2,
-                ),
-                itemBuilder: (context, index) {
-                  return Card(child: _SampleCard(cardName: decks[index].name,
-                      onTap: () async {
-                        await Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                              builder: (_) => LearningView(deck: decks[index])
-                          ),
-                        );
-                        await _loadUser();
-                      },
+            Userinfo(
+              profilPicture: 'assets/images/default_pfp.png',
+              userName: user.username,
+              exp: user.totalXP,
+              expNextLevel: user.xpToNextLevel,
+              level: user.level,
+              streak: user.currentStreak,
+            ),
+            const SizedBox(height: 24),
+            Expanded(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 20),
+                child: GridView.builder(
+                  itemCount: decks.length,
+                  gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                    crossAxisCount: crossAxisCount,
+                    crossAxisSpacing: width / 80,
+                    mainAxisSpacing: width / 80,
+                    childAspectRatio: 2,
                   ),
-                  );
-                },
+                  itemBuilder: (context, index) {
+                    return Card(
+                      child: _SampleCard(
+                        cardName: decks[index].name,
+                        onTap: () async {
+                          await Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => LearningView(
+                                deck: decks[index],
+                                learningController: widget.learningController,
+                              ),
+                            ),
+                          );
+                          await _loadUser();
+                        },
+                      ),
+                    );
+                  },
+                ),
               ),
             ),
-          ),
-              ],
-          ),
+          ],
         ),
+      ),
       //maybe use the floatingActionButton as a button to add new Anki sets?
-    floatingActionButtonLocation: ExpandableFab.location,
-    floatingActionButton: ExpandableFab(
-    type: ExpandableFabType.up,
-    distance: 70,
-    childrenAnimation: ExpandableFabAnimation.none,
-    overlayStyle: ExpandableFabOverlayStyle(
-    color: Colors.white.withOpacity(0.9),
-    ),
-    children: [
-    Row(
-    children: [
-    Text('Import from .akpg'),
-    SizedBox(width: 20),
-    FloatingActionButton.small(
-    heroTag: null,
-    onPressed: () async {
-    await addNewDeck();
-    },
-    child: const Icon(Icons.file_open),
-    ),
-    ],
-    ),
-    Row(
-    children: [
-    Text('Create new deck'),
-    SizedBox(width: 20),
-    FloatingActionButton.small(
-    heroTag: null,
-    child: const Icon(Icons.add),
-    onPressed: () async{
-    await Navigator.push(
-    context,
-    MaterialPageRoute(builder: (_) => FlashcardCreatorView()),
-    );
-    await _loadDecks();
-    }
-
-    ),
-    ],
-    ),
-    ],
-    ),
+      floatingActionButtonLocation: ExpandableFab.location,
+      floatingActionButton: ExpandableFab(
+        type: ExpandableFabType.up,
+        distance: 70,
+        childrenAnimation: ExpandableFabAnimation.none,
+        overlayStyle: ExpandableFabOverlayStyle(
+          color: Colors.white.withOpacity(0.9),
+        ),
+        children: [
+          Row(
+            children: [
+              Text('Import from .akpg'),
+              SizedBox(width: 20),
+              FloatingActionButton.small(
+                heroTag: null,
+                onPressed: () async {
+                  await addNewDeck();
+                },
+                child: const Icon(Icons.file_open),
+              ),
+            ],
+          ),
+          Row(
+            children: [
+              Text('Create new deck'),
+              SizedBox(width: 20),
+              FloatingActionButton.small(
+                heroTag: null,
+                child: const Icon(Icons.add),
+                onPressed: () async {
+                  await Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (_) => FlashcardCreatorView()),
+                  );
+                  await _loadDecks();
+                },
+              ),
+            ],
+          ),
+        ],
+      ),
     );
   }
 }
@@ -187,17 +195,17 @@ class _SampleCard extends StatelessWidget {
   final String cardName;
   final VoidCallback? onTap;
 
-  const _SampleCard({required this.cardName, this.onTap,});
+  const _SampleCard({required this.cardName, this.onTap});
 
   @override
   Widget build(BuildContext context) {
     return InkWell(
       onTap: onTap,
       child: SizedBox(
-          width: 150,
-          height: 100,
-          child: Center(
-              child: Text(cardName))),
+        width: 150,
+        height: 100,
+        child: Center(child: Text(cardName)),
+      ),
     );
   }
 }

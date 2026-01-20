@@ -2,34 +2,92 @@ import 'dart:io';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:funlearn_client/data/serverApi/studySessionApi.dart';
 import 'package:funlearn_client/data/userController.dart';
 import 'package:funlearn_client/data/questController.dart';
-import 'data/databaseHelper.dart';
-import 'screens/home.dart';
-import 'screens/cards_list_view.dart';
-import 'package:sqflite_common_ffi/sqflite_ffi.dart';
-import '../theme/customColors.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:sqflite_common_ffi/sqflite_ffi.dart';
+
+import 'data/databaseHelper.dart';
+import './data/serverApi/apiClient.dart';
+import './data/serverApi/usersApi.dart';
+import './data/studySessionController.dart';
+import './data/learningController.dart';
+import './data/sync/syncService.dart';
+
+import 'screens/home.dart';
+import '../theme/customColors.dart';
+
+class AppDeps {
+  final DatabaseHelper dbHelper;
+  final UserController userController;
+  final LearningController learningController;
+  final SyncService syncService;
+
+  AppDeps({
+    required this.dbHelper,
+    required this.userController,
+    required this.learningController,
+    required this.syncService,
+  });
+}
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
   final prefs = await SharedPreferences.getInstance();
   final saved = prefs.getString('themeMode') ?? 'light';
+
   if (!kIsWeb && (Platform.isWindows || Platform.isLinux || Platform.isMacOS)) {
     sqfliteFfiInit();
     databaseFactory = databaseFactoryFfi;
   }
-  initApplication();
-  runApp(MyApp(initialMode: _parseThemeMode(saved)));
+  final deps = await initApplication();
+
+  runApp(MyApp(initialMode: _parseThemeMode(saved), deps: deps));
 }
-void initApplication() async{
+
+Future<AppDeps> initApplication() async {
   final dbHelper = DatabaseHelper(dbPath: 'database.db');
   //dbHelper.resetDatabase();
-  final userController = UserController.getInstance(dbHelper);
+  final apiClient = ApiClient(baseUrl: 'http://localhost:8080');
+  final usersApi = UsersApi(apiClient.dio);
+  final studySessionApi = StudySessionApi(apiClient.dio);
+
+  final userController = UserController.getInstance(dbHelper, usersApi);
   await userController.getOrCreateUser();
+
   final questController = QuestController.getInstance(dbHelper);
   await questController.createQuestsWhenOffline();
+
+  final studySessionController = StudySessionController.getInstance(
+    dbHelper,
+    userController,
+    studySessionApi,
+  );
+  await studySessionController.init();
+
+  final syncService = SyncService(
+    studySessionController: studySessionController,
+  );
+
+  await syncService.syncNow();
+
+  final controller = LearningController.getInstance(
+    dbHelper,
+    userController,
+    studySessionApi,
+  );
+  await controller.init();
+
+  return AppDeps(
+    dbHelper: dbHelper,
+    userController: userController,
+    learningController: controller,
+    syncService: syncService,
+  );
 }
+
 ThemeMode _parseThemeMode(String s) {
   switch (s) {
     case 'light':
@@ -43,7 +101,8 @@ ThemeMode _parseThemeMode(String s) {
 
 class MyApp extends StatefulWidget {
   final ThemeMode initialMode;
-  const MyApp({super.key, required this.initialMode});
+  final AppDeps deps;
+  const MyApp({super.key, required this.initialMode, required this.deps});
 
   @override
   State<MyApp> createState() => _MyAppState();
@@ -56,6 +115,13 @@ class _MyAppState extends State<MyApp> {
   void initState() {
     super.initState();
     _themeMode = widget.initialMode;
+    widget.deps.syncService.start();
+  }
+
+  @override
+  void dispose() {
+    widget.deps.syncService.dispose();
+    super.dispose();
   }
 
   Future<void> _setThemeMode(ThemeMode mode) async {
@@ -126,7 +192,12 @@ class _MyAppState extends State<MyApp> {
         ],
       ),
       themeMode: _themeMode,
-      home: HomeView(themeMode: _themeMode, onThemeModeChanged: _setThemeMode),
+      home: HomeView(
+        themeMode: _themeMode,
+        onThemeModeChanged: _setThemeMode,
+        dbHelper: widget.deps.dbHelper,
+        learningController: widget.deps.learningController,
+      ),
     );
   }
 }

@@ -19,7 +19,7 @@ class User {
     this.lastStudyDate,
     this.level = 1,
     this.xpToNextLevel = 25,
-  }): userId = userId ?? const Uuid().v4();
+  }) : userId = userId ?? const Uuid().v4();
 
   Map<String, dynamic> toMap() {
     return {
@@ -29,7 +29,7 @@ class User {
       'totalCardsLearned': totalCardsLearned,
       'currentStreak': currentStreak,
       'lastStudyDate': lastStudyDate?.millisecondsSinceEpoch,
-      'level' : level,
+      'level': level,
       'xpToNextLevel': xpToNextLevel,
     };
   }
@@ -48,6 +48,34 @@ class User {
               map['lastStudyDate'],
               isUtc: true,
             )
+          : null,
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'userId': userId,
+      'username': username,
+      'totalXP': totalXP,
+      'totalCardsLearned': totalCardsLearned,
+      'currentStreak': currentStreak,
+      'lastStudyDate': lastStudyDate?.toUtc().toIso8601String(),
+      'level': level,
+      'xpToNextLevel': xpToNextLevel,
+    };
+  }
+
+  factory User.fromJson(Map<String, dynamic> json) {
+    return User(
+      username: json['username'],
+      userId: json['userId'],
+      totalXP: json['totalXP'],
+      totalCardsLearned: json['totalCardsLearned'],
+      currentStreak: json['currentStreak'],
+      level: json['level'],
+      xpToNextLevel: json['xpToNextLevel'],
+      lastStudyDate: json['lastStudyDate'] != null
+          ? DateTime.parse(json['lastStudyDate'])
           : null,
     );
   }

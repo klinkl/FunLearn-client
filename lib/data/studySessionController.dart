@@ -5,21 +5,37 @@ import 'package:funlearn_client/data/questController.dart';
 
 import 'databaseHelper.dart';
 import 'models/studySession.dart';
+import './serverApi/studySessionApi.dart';
 
 class StudySessionController {
   static StudySessionController? _instance;
   final DatabaseHelper helper;
+  final UserController userController;
+  final IStudySessionApi studySessionApi;
+
   late String userId;
-  late final UserController userController;
-  StudySessionController._internal(this.helper);
-  static StudySessionController getInstance(DatabaseHelper helper) {
-    return _instance ??= StudySessionController._internal(helper);
+  StudySessionController._internal(
+    this.helper,
+    this.userController,
+    this.studySessionApi,
+  );
+
+  static StudySessionController getInstance(
+    DatabaseHelper helper,
+    UserController userController,
+    IStudySessionApi studySessionApi,
+  ) {
+    return _instance ??= StudySessionController._internal(
+      helper,
+      userController,
+      studySessionApi,
+    );
   }
+
   Future<void> init() async {
     final users = await helper.getAllUsers();
     if (users.isEmpty) throw Exception('No users found');
     userId = users.first.userId!;
-    userController = UserController.getInstance(helper);
   }
 
   int xpFromRating(Rating rating) {
@@ -51,15 +67,47 @@ class StudySessionController {
   Future<(DateTime?, StudySession)> createSession(Rating rating) async {
     final xp = xpFromRating(rating);
     final cardsLearnt = cardsLearnedFromRating(rating);
+
     final session = StudySession(
       userId: userId,
       xp: xp,
       cardsLearnt: cardsLearnt,
       timeStamp: DateTime.now().toUtc(),
+      synced: false,
     );
+
     await helper.insertStudySession(session);
+
+    try {
+      await studySessionApi.createStudySession(session);
+      await helper.markStudySessionSynced(session.studySessionId);
+    } catch (_) {}
+
     final lastStudy = await userController.updateUserWithStudySession(session);
     return (lastStudy, session);
+  }
+
+  Future<void> syncPendingSessions() async {
+    final pending = await helper.getPendingStudySessions();
+
+    var syncedAny = false;
+
+    for (final session in pending) {
+      try {
+        await studySessionApi.createStudySession(session);
+        await helper.markStudySessionSynced(session.studySessionId);
+        syncedAny = true;
+      } catch (_) {
+        break;
+      }
+    }
+
+    if (syncedAny) {
+      final stillPending = await helper.getPendingStudySessions();
+      if (stillPending.isEmpty) {
+        await userController.refreshFromServer(userId);
+      }
+    }
   }
 
   @visibleForTesting
@@ -67,4 +115,8 @@ class StudySessionController {
     userId = id;
   }
 
+  @visibleForTesting
+  static void resetInstanceForTest() {
+    _instance = null;
+  }
 }

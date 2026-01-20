@@ -1,18 +1,36 @@
+import 'package:flutter/cupertino.dart';
 import 'databaseHelper.dart';
 import 'models/studySession.dart';
 import 'models/user.dart';
+import './serverApi/usersApi.dart';
 
 class UserController {
   static UserController? _instance;
   final DatabaseHelper helper;
+  final UsersApi usersApi;
 
-  UserController._internal(this.helper);
-  static UserController getInstance(DatabaseHelper helper) {
-    return _instance ??= UserController._internal(helper);
+  UserController._internal(this.helper, this.usersApi);
+  static UserController getInstance(DatabaseHelper helper, UsersApi usersApi) {
+    return _instance ??= UserController._internal(helper, usersApi);
   }
+
   Future<User> getOrCreateUser() async {
     final users = await helper.getAllUsers();
-    if (users.isNotEmpty) return users.first;
+    //if local user exist -> try to get server version
+    if (users.isNotEmpty) {
+      final localUser = users.first;
+
+      try {
+        final remoteUser = await usersApi.getUserById(localUser.userId);
+        await helper.upsertUser(remoteUser);
+        return remoteUser;
+      } catch (e) {
+        try {
+          await usersApi.createUser(localUser);
+        } catch (_) {}
+        return localUser;
+      }
+    }
 
     final newUser = User(
       username: 'User',
@@ -23,6 +41,11 @@ class UserController {
     );
 
     await helper.insertUser(newUser);
+
+    // try to create it on the server
+    try {
+      await usersApi.createUser(newUser);
+    } catch (_) {}
 
     return newUser;
   }
@@ -53,21 +76,42 @@ class UserController {
     return (level, xpNeeded);
   }
 
-  Future<DateTime?> updateUserWithStudySession(StudySession studySession) async {
+  Future<DateTime?> updateUserWithStudySession(
+    StudySession studySession,
+  ) async {
     final user = await helper.getUserById(studySession.userId);
+    if (user == null) throw Exception('User not found locally');
+
     final (newLevel, xpTowardsNextLevel) = calculateLevel(studySession, user!);
-    await helper.updateUser(
-      User(
-        username: user.username,
-        userId: user.userId,
-        currentStreak: calculateStreak(user.lastStudyDate, user.currentStreak),
-        lastStudyDate: studySession.timeStamp,
-        totalXP: user.totalXP + studySession.xp,
-        totalCardsLearned: user.totalCardsLearned + studySession.cardsLearnt,
-        level: newLevel,
-        xpToNextLevel: xpTowardsNextLevel,
-      ),
+
+    final updatedUser = User(
+      username: user.username,
+      userId: user.userId,
+      currentStreak: calculateStreak(user.lastStudyDate, user.currentStreak),
+      lastStudyDate: studySession.timeStamp,
+      totalXP: user.totalXP + studySession.xp,
+      totalCardsLearned: user.totalCardsLearned + studySession.cardsLearnt,
+      level: newLevel,
+      xpToNextLevel: xpTowardsNextLevel,
     );
+
+    await helper.upsertUser(updatedUser);
+
     return user.lastStudyDate;
+  }
+
+  Future<User?> refreshFromServer(String userId) async {
+    try {
+      final remoteUser = await usersApi.getUserById(userId);
+      await helper.upsertUser(remoteUser);
+      return remoteUser;
+    } catch (_) {
+      return null;
+    }
+  }
+
+  @visibleForTesting
+  static void resetInstanceForTest() {
+    _instance = null;
   }
 }

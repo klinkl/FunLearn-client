@@ -1,3 +1,4 @@
+import 'package:flutter/cupertino.dart';
 import 'package:funlearn_client/data/models/deck.dart';
 import 'package:funlearn_client/data/models/studySession.dart';
 import 'package:sqflite/sqflite.dart';
@@ -33,8 +34,15 @@ class DatabaseHelper {
 
     return await openDatabase(
       path,
-      version: 1,
+      version: 2,
       onCreate: _onCreate,
+      onUpgrade: (db, oldVersion, newVersion) async {
+        if (oldVersion < 2) {
+          await db.execute(
+            "ALTER TABLE StudySession ADD COLUMN synced INTEGER NOT NULL DEFAULT 0",
+          );
+        }
+      },
       onOpen: (db) async {
         await db.execute('PRAGMA foreign_keys = ON');
       },
@@ -88,6 +96,7 @@ class DatabaseHelper {
     userId TEXT NOT NULL,
     xp INTEGER NOT NULL,
     cardsLearnt INTEGER NOT NULL,
+    synced INTEGER NOT NULL DEFAULT 0 CHECK (synced IN (0,1)),
     FOREIGN KEY (userId) REFERENCES User(userId) ON DELETE CASCADE
 );
     ''');
@@ -127,6 +136,26 @@ class DatabaseHelper {
     );
 
     return maps.map((map) => StudySession.fromMap(map)).toList();
+  }
+
+  Future<List<StudySession>> getPendingStudySessions() async {
+    final db = await _instance!.database;
+    final maps = await db.query(
+      'StudySession',
+      where: 'synced = 0',
+      orderBy: 'timeStamp ASC',
+    );
+    return maps.map((map) => StudySession.fromMap(map)).toList();
+  }
+
+  Future<int> markStudySessionSynced(String studySessionId) async {
+    final db = await _instance!.database;
+    return await db.update(
+      'StudySession',
+      {'synced': 1},
+      where: 'studySessionId = ?',
+      whereArgs: [studySessionId],
+    );
   }
 
   Future<User?> getUserById(String userId) async {
@@ -170,7 +199,11 @@ class DatabaseHelper {
 
   Future<int> deleteQuest(String questId) async {
     final db = await _instance!.database;
-    return await db.delete('ModelQuest', where: 'questId = ?', whereArgs: [questId]);
+    return await db.delete(
+      'ModelQuest',
+      where: 'questId = ?',
+      whereArgs: [questId],
+    );
   }
 
   Future<int> updateQuest(ModelQuest quest) async {
@@ -207,6 +240,26 @@ class DatabaseHelper {
       where: 'userId = ?',
       whereArgs: [user.userId],
     );
+  }
+
+  //insert user if it doesn't exist or update it
+  Future<void> upsertUser(User user) async {
+    final db = await _instance!.database;
+
+    final insertedId = await db.insert(
+      'User',
+      user.toMap(),
+      conflictAlgorithm: ConflictAlgorithm.ignore,
+    );
+
+    if (insertedId == 0) {
+      await db.update(
+        'User',
+        user.toMap(),
+        where: 'userId = ?',
+        whereArgs: [user.userId],
+      );
+    }
   }
 
   Future<int> deleteCard(int cardId) async {
@@ -338,5 +391,14 @@ class DatabaseHelper {
       await _database!.close();
       _database = null;
     }
+  }
+
+  @visibleForTesting
+  static Future<void> resetInstanceForTest() async {
+    if (_database != null) {
+      await _database!.close();
+      _database = null;
+    }
+    _instance = null;
   }
 }
