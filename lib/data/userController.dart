@@ -1,3 +1,4 @@
+import 'package:flutter/cupertino.dart';
 import 'databaseHelper.dart';
 import 'models/studySession.dart';
 import 'models/user.dart';
@@ -96,10 +97,21 @@ class UserController {
 
     await helper.upsertUser(updatedUser);
 
-    try {
-      await usersApi.updateUser(updatedUser);
-    } catch (_) {}
-
     return user.lastStudyDate;
+  }
+
+  Future<User?> refreshFromServer(String userId) async {
+    try {
+      final remoteUser = await usersApi.getUserById(userId);
+      await helper.upsertUser(remoteUser);
+      return remoteUser;
+    } catch (_) {
+      return null;
+    }
+  }
+
+  @visibleForTesting
+  static void resetInstanceForTest() {
+    _instance = null;
   }
 }

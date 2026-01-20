@@ -11,6 +11,7 @@ import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 import 'data/databaseHelper.dart';
 import './data/serverApi/apiClient.dart';
 import './data/serverApi/usersApi.dart';
+import './data/studySessionController.dart';
 import './data/learningController.dart';
 
 import 'screens/home.dart';
@@ -59,11 +60,20 @@ Future<AppDeps> initApplication() async {
   final questController = QuestController.getInstance(dbHelper);
   await questController.createQuestsWhenOffline();
 
+  final studySessionController = StudySessionController.getInstance(
+    dbHelper,
+    userController,
+    studySessionApi,
+  );
+  await studySessionController.init();
+  await studySessionController.syncPendingSessions();
+
   final controller = LearningController.getInstance(
     dbHelper,
     userController,
     studySessionApi,
   );
+  await controller.init();
 
   return AppDeps(
     dbHelper: dbHelper,

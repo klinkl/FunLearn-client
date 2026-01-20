@@ -1,4 +1,5 @@
 import 'package:fsrs/fsrs.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:funlearn_client/data/databaseHelper.dart';
 import 'package:funlearn_client/data/models/flashcard.dart';
 import 'package:funlearn_client/data/models/deck.dart';
@@ -12,7 +13,7 @@ class LearningController {
   static LearningController? _instance;
   final DatabaseHelper helper;
   final UserController userController;
-  final StudySessionApi studySessionApi;
+  final IStudySessionApi studySessionApi;
 
   late final StudySessionController studySessionController;
   late final QuestController questController;
@@ -32,20 +33,23 @@ class LearningController {
       userController,
       studySessionApi,
     );
-    studySessionController.init();
     questController = QuestController.getInstance(helper);
   }
 
   static LearningController getInstance(
     DatabaseHelper helper,
     UserController userController,
-    StudySessionApi studySessionApi,
+    IStudySessionApi studySessionApi,
   ) {
     return _instance ??= LearningController._internal(
       helper,
       userController,
       studySessionApi,
     );
+  }
+
+  Future<void> init() async {
+    await studySessionController.init();
   }
 
   Future<Flashcard?> getNextCard(int deckId) async {
@@ -154,5 +158,10 @@ class LearningController {
         ),
       );
     }
+  }
+
+  @visibleForTesting
+  static void resetInstanceForTest() {
+    _instance = null;
   }
 }
