@@ -34,8 +34,15 @@ class DatabaseHelper {
 
     return await openDatabase(
       path,
-      version: 1,
+      version: 2,
       onCreate: _onCreate,
+      onUpgrade: (db, oldVersion, newVersion) async {
+        if (oldVersion < 2) {
+          await db.execute(
+            "ALTER TABLE StudySession ADD COLUMN synced INTEGER NOT NULL DEFAULT 0",
+          );
+        }
+      },
       onOpen: (db) async {
         await db.execute('PRAGMA foreign_keys = ON');
       },

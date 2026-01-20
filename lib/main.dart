@@ -13,22 +13,22 @@ import './data/serverApi/apiClient.dart';
 import './data/serverApi/usersApi.dart';
 import './data/studySessionController.dart';
 import './data/learningController.dart';
+import './data/sync/syncService.dart';
 
 import 'screens/home.dart';
 import '../theme/customColors.dart';
-
-//testing
-import 'screens/test_view.dart';
 
 class AppDeps {
   final DatabaseHelper dbHelper;
   final UserController userController;
   final LearningController learningController;
+  final SyncService syncService;
 
   AppDeps({
     required this.dbHelper,
     required this.userController,
     required this.learningController,
+    required this.syncService,
   });
 }
 
@@ -66,7 +66,12 @@ Future<AppDeps> initApplication() async {
     studySessionApi,
   );
   await studySessionController.init();
-  await studySessionController.syncPendingSessions();
+
+  final syncService = SyncService(
+    studySessionController: studySessionController,
+  );
+
+  await syncService.syncNow();
 
   final controller = LearningController.getInstance(
     dbHelper,
@@ -79,6 +84,7 @@ Future<AppDeps> initApplication() async {
     dbHelper: dbHelper,
     userController: userController,
     learningController: controller,
+    syncService: syncService,
   );
 }
 
@@ -109,6 +115,13 @@ class _MyAppState extends State<MyApp> {
   void initState() {
     super.initState();
     _themeMode = widget.initialMode;
+    widget.deps.syncService.start();
+  }
+
+  @override
+  void dispose() {
+    widget.deps.syncService.dispose();
+    super.dispose();
   }
 
   Future<void> _setThemeMode(ThemeMode mode) async {
@@ -185,8 +198,6 @@ class _MyAppState extends State<MyApp> {
         dbHelper: widget.deps.dbHelper,
         learningController: widget.deps.learningController,
       ),
-
-      //home: ApiTestScreen(), //testing
     );
   }
 }

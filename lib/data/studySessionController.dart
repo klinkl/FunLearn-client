@@ -65,8 +65,6 @@ class StudySessionController {
   }
 
   Future<(DateTime?, StudySession)> createSession(Rating rating) async {
-    await syncPendingSessions();
-
     final xp = xpFromRating(rating);
     final cardsLearnt = cardsLearnedFromRating(rating);
 
@@ -80,15 +78,13 @@ class StudySessionController {
 
     await helper.insertStudySession(session);
 
-    StudySession sessionToReturn = session;
     try {
       await studySessionApi.createStudySession(session);
-      await helper.markStudySessionSynced(session.studySessionId!);
-      sessionToReturn = session.copyWith(synced: true);
+      await helper.markStudySessionSynced(session.studySessionId);
     } catch (_) {}
 
     final lastStudy = await userController.updateUserWithStudySession(session);
-    return (lastStudy, sessionToReturn);
+    return (lastStudy, session);
   }
 
   Future<void> syncPendingSessions() async {

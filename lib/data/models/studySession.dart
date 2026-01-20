@@ -59,6 +59,7 @@ class StudySession {
       'timeStamp': timeStamp.toUtc().toIso8601String(),
       'xp': xp,
       'cardsLearnt': cardsLearnt,
+      'synced': synced,
       'userId': userId,
     };
   }
@@ -69,6 +70,7 @@ class StudySession {
       timeStamp: DateTime.parse(json['timeStamp']).toUtc(),
       xp: json['xp'],
       cardsLearnt: json['cardsLearnt'],
+      synced: json['synced'],
       userId: json['userId'],
     );
   }
