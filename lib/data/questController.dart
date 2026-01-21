@@ -1,24 +1,36 @@
 import 'package:funlearn_client/data/databaseHelper.dart';
+import 'package:flutter/cupertino.dart';
 
 import 'models/modelQuest.dart';
 import 'models/studySession.dart';
 import 'models/user.dart';
+import './serverApi/questApi.dart';
 
 class QuestController {
   static QuestController? _instance;
+
   final DatabaseHelper helper;
+  final IQuestsApi questsApi;
 
-  QuestController._internal(this.helper);
+  late String userId;
 
-  static QuestController getInstance(DatabaseHelper helper) {
-    return _instance ??= QuestController._internal(helper);
+  QuestController._internal(this.helper, this.questsApi);
+
+  static QuestController getInstance(
+    DatabaseHelper helper,
+    IQuestsApi questApi,
+  ) {
+    return _instance ??= QuestController._internal(helper, questApi);
+  }
+
+  Future<void> init() async {
+    final users = await helper.getAllUsers();
+    if (users.isEmpty) throw Exception('No users found');
+    userId = users.first.userId!;
   }
 
   Future<List<ModelQuest>> getRelevantQuests() async {
-    final users = await helper.getAllUsers();
-    if (users.isEmpty) throw Exception('No users found');
-    final user = users.first;
-    final currentQuests = await helper.getAllQuestsByUser(user.userId!);
+    final currentQuests = await helper.getAllQuestsByUser(userId);
     // only see quests that havent expired or expired in the last 12 hours
     final cutoff = DateTime.now().toUtc().subtract(const Duration(hours: 12));
     return currentQuests.where((quest) {
@@ -27,10 +39,7 @@ class QuestController {
   }
 
   Future<void> createQuestsWhenOffline() async {
-    final users = await helper.getAllUsers();
-    if (users.isEmpty) throw Exception('No users found');
-    final user = users.first;
-    final currentQuests = await helper.getAllQuestsByUser(user.userId!);
+    final currentQuests = await helper.getAllQuestsByUser(userId);
     final currentTime = DateTime.now().toUtc();
     final allExpired = currentQuests.every(
       (quest) => quest.expiryDate.isBefore(currentTime),
@@ -39,7 +48,7 @@ class QuestController {
     if (allExpired) {
       await helper.insertQuest(
         ModelQuest(
-          userIds: [user.userId!],
+          userIds: [userId],
           questType: QuestType.XP,
           startDate: currentTime,
           expiryDate: currentTime.add(const Duration(days: 2)),
@@ -49,7 +58,7 @@ class QuestController {
       );
       await helper.insertQuest(
         ModelQuest(
-          userIds: [user.userId!],
+          userIds: [userId],
           questType: QuestType.CardsLearnt,
           startDate: currentTime,
           expiryDate: currentTime.add(const Duration(days: 2)),
@@ -59,7 +68,7 @@ class QuestController {
       );
       await helper.insertQuest(
         ModelQuest(
-          userIds: [user.userId!],
+          userIds: [userId],
           questType: QuestType.Streak,
           startDate: currentTime,
           expiryDate: currentTime.add(const Duration(days: 7)),
@@ -76,8 +85,10 @@ class QuestController {
   ) async {
     final quests = await helper.getAllQuestsByUser(studySession.userId);
     if (quests.isEmpty) return;
+
     for (var quest in quests) {
       if (quest.finished) continue;
+
       switch (quest.questType) {
         case QuestType.XP:
           var newValue = quest.currentValue + studySession.xp;
@@ -100,6 +111,7 @@ class QuestController {
             ),
           );
           break;
+
         case QuestType.CardsLearnt:
           var newValue = quest.currentValue + studySession.cardsLearnt;
           var finished = false;
@@ -121,6 +133,7 @@ class QuestController {
             ),
           );
           break;
+
         case QuestType.Streak:
           var newStreak = 0;
           if (lastStudyDate == null) {
@@ -143,10 +156,12 @@ class QuestController {
               newStreak = quest.currentValue;
             }
           }
+
           var finished = false;
           if (newStreak >= quest.requestedValue) {
             finished = true;
           }
+
           await helper.updateQuest(
             ModelQuest(
               userIds: quest.userIds,
@@ -164,4 +179,19 @@ class QuestController {
       }
     }
   }
+
+  Future<void> refreshFromServer() async {
+    final remoteQuests = await questsApi.getQuestsByUserId(userId);
+    await helper.deleteQuestsByUser(userId);
+
+    for (final q in remoteQuests) {
+      await helper.upsertQuest(q);
+    }
+  }
+
+  @visibleForTesting
+  void setUserIdForTest(String id) => userId = id;
+
+  @visibleForTesting
+  static void resetInstanceForTest() => _instance = null;
 }

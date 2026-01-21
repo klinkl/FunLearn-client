@@ -1,10 +1,14 @@
 import 'dart:async';
 
 import 'package:connectivity_plus/connectivity_plus.dart';
+import 'package:funlearn_client/data/databaseHelper.dart';
 import 'package:funlearn_client/data/studySessionController.dart';
+import 'package:funlearn_client/data/questController.dart';
 
 class SyncService {
   final StudySessionController studySessionController;
+  final QuestController questController;
+  final DatabaseHelper dbHelper;
   final Stream<ConnectivityResult> connectivityStream; //for test
 
   bool _syncInProgress = false;
@@ -13,6 +17,8 @@ class SyncService {
 
   SyncService({
     required this.studySessionController,
+    required this.questController,
+    required this.dbHelper,
     Stream<ConnectivityResult>? connectivityStream,
   }) : connectivityStream =
            connectivityStream ??
@@ -46,6 +52,11 @@ class SyncService {
     _syncInProgress = true;
     try {
       await studySessionController.syncPendingSessions();
+      final stillPending = await dbHelper.getPendingStudySessions();
+
+      if (stillPending.isEmpty) {
+        await questController.refreshFromServer();
+      }
       _lastFailure = null;
     } catch (_) {
       _lastFailure = DateTime.now();

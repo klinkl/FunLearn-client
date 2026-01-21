@@ -5,6 +5,7 @@ import 'package:funlearn_client/data/models/flashcard.dart';
 import 'package:funlearn_client/data/models/deck.dart';
 import 'package:funlearn_client/data/models/user.dart';
 import 'package:funlearn_client/data/questController.dart';
+import 'package:funlearn_client/data/serverApi/questApi.dart';
 import 'package:funlearn_client/data/serverApi/studySessionApi.dart';
 import 'package:funlearn_client/data/studySessionController.dart';
 import 'package:funlearn_client/data/userController.dart';
@@ -14,6 +15,7 @@ class LearningController {
   final DatabaseHelper helper;
   final UserController userController;
   final IStudySessionApi studySessionApi;
+  final IQuestsApi questsApi;
 
   late final StudySessionController studySessionController;
   late final QuestController questController;
@@ -27,24 +29,27 @@ class LearningController {
     this.helper,
     this.userController,
     this.studySessionApi,
+    this.questsApi,
   ) {
     studySessionController = StudySessionController.getInstance(
       helper,
       userController,
       studySessionApi,
     );
-    questController = QuestController.getInstance(helper);
+    questController = QuestController.getInstance(helper, questsApi);
   }
 
   static LearningController getInstance(
     DatabaseHelper helper,
     UserController userController,
     IStudySessionApi studySessionApi,
+    IQuestsApi questsApi,
   ) {
     return _instance ??= LearningController._internal(
       helper,
       userController,
       studySessionApi,
+      questsApi,
     );
   }
 
