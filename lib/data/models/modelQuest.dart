@@ -35,8 +35,8 @@ class ModelQuest {
       'expiryDate': expiryDate.millisecondsSinceEpoch,
       'currentValue': currentValue,
       'requestedValue': requestedValue,
-      'finished': finished? 1 : 0,
-      'friendsQuest': friendsQuest? 1 : 0,
+      'finished': finished ? 1 : 0,
+      'friendsQuest': friendsQuest ? 1 : 0,
     };
   }
 
@@ -57,6 +57,36 @@ class ModelQuest {
       requestedValue: map['requestedValue'],
       finished: map['finished'] == 0 ? false : true,
       friendsQuest: map['friendsQuest'] == 0 ? false : true,
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'questId': questId,
+      'userIds': userIds,
+      'questType': questType.name,
+      'startDate': startDate?.toUtc().toIso8601String(),
+      'expiryDate': expiryDate.toUtc().toIso8601String(),
+      'currentValue': currentValue,
+      'requestedValue': requestedValue,
+      'finished': finished,
+      'friendsQuest': friendsQuest,
+    };
+  }
+
+  factory ModelQuest.fromJson(Map<String, dynamic> json) {
+    return ModelQuest(
+      questId: json['questId'] as String?,
+      userIds: List<String>.from(json['userIds'] as List),
+      questType: QuestType.values.byName(json['questType'] as String),
+      startDate: json['startDate'] != null
+          ? DateTime.parse(json['startDate'] as String).toUtc()
+          : null,
+      expiryDate: DateTime.parse(json['expiryDate'] as String).toUtc(),
+      currentValue: (json['currentValue'] as num?)?.toInt() ?? 0,
+      requestedValue: (json['requestedValue'] as num).toInt(),
+      finished: json['finished'] as bool? ?? false,
+      friendsQuest: json['friendsQuest'] as bool? ?? false,
     );
   }
 }

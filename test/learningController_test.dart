@@ -7,11 +7,14 @@ import 'package:funlearn_client/data/models/flashcard.dart';
 import 'package:funlearn_client/data/models/user.dart';
 import 'package:funlearn_client/data/studySessionController.dart';
 import 'package:funlearn_client/data/userController.dart';
+import 'package:funlearn_client/data/questController.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 
 import 'package:funlearn_client/data/models/studySession.dart';
 import 'package:funlearn_client/data/serverApi/usersApi.dart';
 import 'package:funlearn_client/data/serverApi/studySessionApi.dart';
+import 'package:funlearn_client/data/serverApi/questApi.dart';
+import 'package:funlearn_client/data/models/modelQuest.dart';
 
 class FakeUsersApi implements UsersApi {
   final Map<String, User> _remote = {};
@@ -58,7 +61,37 @@ class FakeStudySessionApi implements IStudySessionApi {
   @override
   Future<void> createStudySession(StudySession session) async {
     if (throwOnCreate) throw Exception('Server down');
-    receivedIds.add(session.studySessionId!);
+    receivedIds.add(session.studySessionId ?? '');
+  }
+}
+
+class FakeQuestsApi implements IQuestsApi {
+  bool throwOnGet = false;
+
+  void reset() {
+    throwOnGet = false;
+  }
+
+  @override
+  Future<List<ModelQuest>> getQuestsByUserId(String userId) async {
+    if (throwOnGet) throw Exception('Server down');
+    return <ModelQuest>[];
+  }
+
+  @override
+  Future<ModelQuest> getQuestById(String questId) async {
+    if (throwOnGet) throw Exception('Server down');
+    throw Exception('Not implemented');
+  }
+
+  @override
+  Future<void> createQuest(ModelQuest quest) async {
+    if (throwOnGet) throw Exception('Server down');
+  }
+
+  @override
+  Future<void> updateQuest(ModelQuest quest) async {
+    if (throwOnGet) throw Exception('Server down');
   }
 }
 
@@ -72,39 +105,27 @@ void main() {
 
   late FakeUsersApi fakeUsersApi;
   late FakeStudySessionApi fakeStudySessionApi;
+  late FakeQuestsApi fakeQuestsApi;
 
   late UserController userController;
-  late StudySessionController studySessionController;
   late LearningController controller;
 
-  setUpAll(() async {
-    dbHelper = DatabaseHelper(dbPath: path);
-
-    fakeUsersApi = FakeUsersApi();
-    fakeStudySessionApi = FakeStudySessionApi();
-
-    userController = UserController.getInstance(dbHelper, fakeUsersApi);
-
-    studySessionController = StudySessionController.getInstance(
-      dbHelper,
-      userController,
-      fakeStudySessionApi,
-    );
-  });
-
   setUp(() async {
+    await DatabaseHelper.resetInstanceForTest();
     LearningController.resetInstanceForTest();
     StudySessionController.resetInstanceForTest();
     UserController.resetInstanceForTest();
+    QuestController.resetInstanceForTest();
 
     dbHelper = DatabaseHelper(dbPath: path);
     await dbHelper.resetDatabase();
 
+    fakeUsersApi = FakeUsersApi()..reset();
+    fakeStudySessionApi = FakeStudySessionApi()..reset();
+    fakeQuestsApi = FakeQuestsApi()..reset();
+
     final user = User();
     await dbHelper.insertUser(user);
-
-    fakeUsersApi.reset();
-    fakeStudySessionApi.reset();
     fakeUsersApi.seedUser(user);
 
     userController = UserController.getInstance(dbHelper, fakeUsersApi);
@@ -113,6 +134,7 @@ void main() {
       dbHelper,
       userController,
       fakeStudySessionApi,
+      fakeQuestsApi,
     );
     await controller.init();
 
@@ -121,11 +143,10 @@ void main() {
       userController,
       fakeStudySessionApi,
     );
-    await sessionController.init();
     sessionController.setUserIdForTest(user.userId);
   });
 
-  tearDownAll(() async {
+  tearDown(() async {
     await dbHelper.resetDatabase();
     await dbHelper.closeDatabase();
   });
@@ -150,7 +171,7 @@ void main() {
       deckId: 1,
       front: "Test",
       back: "Apple",
-      due: DateTime.now(),
+      due: DateTime.now().toUtc(),
     );
 
     await dbHelper.insertDeck(deck);
@@ -173,19 +194,21 @@ void main() {
 
   test('returns earliest due card when multiple cards are due', () async {
     final deck = Deck(deckId: 1, name: "name");
+    final now = DateTime.now().toUtc();
+
     final card1 = Flashcard(
       cardId: 1,
       deckId: 1,
       front: "Test",
       back: "Apple",
-      due: DateTime.now(),
+      due: now,
     );
     final card2 = Flashcard(
       cardId: 2,
       deckId: 1,
       front: "Pear",
       back: "Test",
-      due: DateTime.now(),
+      due: now,
     );
 
     await dbHelper.insertDeck(deck);
@@ -253,7 +276,7 @@ void main() {
   test(
     'runDailyNewCardRelease schedules new cards when not run today',
     () async {
-      final deck = Deck(deckId: 1, name: "name");
+      final deck = Deck(deckId: 1, name: "name", maxNewCards: 32);
       await dbHelper.insertDeck(deck);
 
       for (int i = 0; i < 32; i++) {

@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:funlearn_client/data/serverApi/questApi.dart';
 import 'package:funlearn_client/data/serverApi/studySessionApi.dart';
 import 'package:funlearn_client/data/userController.dart';
 import 'package:funlearn_client/data/questController.dart';
@@ -23,12 +24,14 @@ class AppDeps {
   final UserController userController;
   final LearningController learningController;
   final SyncService syncService;
+  final QuestController questController;
 
   AppDeps({
     required this.dbHelper,
     required this.userController,
     required this.learningController,
     required this.syncService,
+    required this.questController,
   });
 }
 
@@ -53,12 +56,13 @@ Future<AppDeps> initApplication() async {
   final apiClient = ApiClient(baseUrl: 'http://localhost:8080');
   final usersApi = UsersApi(apiClient.dio);
   final studySessionApi = StudySessionApi(apiClient.dio);
+  final questApi = QuestsApi(apiClient.dio);
 
   final userController = UserController.getInstance(dbHelper, usersApi);
   await userController.getOrCreateUser();
 
-  final questController = QuestController.getInstance(dbHelper);
-  await questController.createQuestsWhenOffline();
+  final questController = QuestController.getInstance(dbHelper, questApi);
+  await questController.init();
 
   final studySessionController = StudySessionController.getInstance(
     dbHelper,
@@ -69,6 +73,8 @@ Future<AppDeps> initApplication() async {
 
   final syncService = SyncService(
     studySessionController: studySessionController,
+    questController: questController,
+    dbHelper: dbHelper,
   );
 
   await syncService.syncNow();
@@ -77,6 +83,7 @@ Future<AppDeps> initApplication() async {
     dbHelper,
     userController,
     studySessionApi,
+    questApi,
   );
   await controller.init();
 
@@ -85,6 +92,7 @@ Future<AppDeps> initApplication() async {
     userController: userController,
     learningController: controller,
     syncService: syncService,
+    questController: questController,
   );
 }
 
@@ -197,6 +205,7 @@ class _MyAppState extends State<MyApp> {
         onThemeModeChanged: _setThemeMode,
         dbHelper: widget.deps.dbHelper,
         learningController: widget.deps.learningController,
+        questController: widget.deps.questController,
       ),
     );
   }

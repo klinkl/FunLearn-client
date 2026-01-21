@@ -6,13 +6,16 @@ import 'package:fsrs/fsrs.dart';
 import 'package:funlearn_client/data/databaseHelper.dart';
 import 'package:funlearn_client/data/models/studySession.dart';
 import 'package:funlearn_client/data/models/user.dart';
+import 'package:funlearn_client/data/models/modelQuest.dart';
 import 'package:funlearn_client/data/studySessionController.dart';
 import 'package:funlearn_client/data/userController.dart';
+import 'package:funlearn_client/data/questController.dart';
 import 'package:funlearn_client/data/sync/syncService.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 
 import 'package:funlearn_client/data/serverApi/studySessionApi.dart';
 import 'package:funlearn_client/data/serverApi/usersApi.dart';
+import 'package:funlearn_client/data/serverApi/questApi.dart';
 
 class FakeStudySessionApi implements IStudySessionApi {
   bool online = false;
@@ -51,6 +54,34 @@ class FakeUsersApi implements UsersApi {
   Future<List<User>> getAllUsers() async => _remote.values.toList();
 }
 
+class FakeQuestsApi implements IQuestsApi {
+  bool online = true;
+  int getByUserCalls = 0;
+
+  @override
+  Future<List<ModelQuest>> getQuestsByUserId(String userId) async {
+    if (!online) throw Exception('No connection');
+    getByUserCalls += 1;
+    return <ModelQuest>[];
+  }
+
+  @override
+  Future<ModelQuest> getQuestById(String questId) async {
+    if (!online) throw Exception('No connection');
+    throw UnimplementedError();
+  }
+
+  @override
+  Future<void> createQuest(ModelQuest quest) async {
+    if (!online) throw Exception('No connection');
+  }
+
+  @override
+  Future<void> updateQuest(ModelQuest quest) async {
+    if (!online) throw Exception('No connection');
+  }
+}
+
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
   sqfliteFfiInit();
@@ -61,8 +92,11 @@ void main() {
   late DatabaseHelper dbHelper;
   late FakeUsersApi fakeUsersApi;
   late FakeStudySessionApi fakeSessionApi;
+  late FakeQuestsApi fakeQuestsApi;
+
   late UserController userController;
   late StudySessionController sessionController;
+  late QuestController questController;
 
   late StreamController<ConnectivityResult> connectivityCtrl;
   late SyncService syncService;
@@ -71,12 +105,14 @@ void main() {
     await DatabaseHelper.resetInstanceForTest();
     StudySessionController.resetInstanceForTest();
     UserController.resetInstanceForTest();
+    QuestController.resetInstanceForTest();
 
     dbHelper = DatabaseHelper(dbPath: path);
     await dbHelper.resetDatabase();
 
     fakeUsersApi = FakeUsersApi();
     fakeSessionApi = FakeStudySessionApi();
+    fakeQuestsApi = FakeQuestsApi();
 
     final user = User();
     await dbHelper.insertUser(user);
@@ -91,10 +127,15 @@ void main() {
     );
     sessionController.setUserIdForTest(user.userId);
 
+    questController = QuestController.getInstance(dbHelper, fakeQuestsApi);
+    questController.setUserIdForTest(user.userId);
+
     connectivityCtrl = StreamController<ConnectivityResult>.broadcast();
 
     syncService = SyncService(
       studySessionController: sessionController,
+      questController: questController,
+      dbHelper: dbHelper,
       connectivityStream: connectivityCtrl.stream,
     );
   });
@@ -120,11 +161,13 @@ void main() {
     fakeSessionApi.online = true;
     connectivityCtrl.add(ConnectivityResult.wifi);
 
-    await Future<void>.delayed(const Duration(milliseconds: 50));
+    await Future<void>.delayed(const Duration(milliseconds: 80));
 
     final pending2 = await dbHelper.getPendingStudySessions();
     expect(pending2.isEmpty, isTrue);
 
     expect(fakeSessionApi.received.length, 2);
+
+    expect(fakeQuestsApi.getByUserCalls, greaterThanOrEqualTo(1));
   });
 }

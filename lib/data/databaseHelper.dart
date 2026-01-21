@@ -216,6 +216,28 @@ class DatabaseHelper {
     );
   }
 
+  Future<int> upsertQuest(ModelQuest quest) async {
+    final db = await _instance!.database;
+    return await db.insert(
+      'ModelQuest',
+      quest.toMap(),
+      conflictAlgorithm: ConflictAlgorithm.replace,
+    );
+  }
+
+  Future<int> deleteQuestsByUser(String userId) async {
+    final db = await _instance!.database;
+    return await db.rawDelete(
+      '''
+      DELETE FROM ModelQuest
+      WHERE EXISTS (
+        SELECT 1 FROM json_each(userIds) WHERE json_each.value = ?
+      )
+      ''',
+      [userId],
+    );
+  }
+
   Future<List<User>> getAllUsers() async {
     final db = await _instance!.database;
     final maps = await db.query('User');
