@@ -1,4 +1,5 @@
 import 'package:uuid/uuid.dart';
+import 'dart:convert';
 
 class User {
   String username;
@@ -9,6 +10,7 @@ class User {
   DateTime? lastStudyDate;
   int level;
   int xpToNextLevel;
+  List<String> friends;
 
   User({
     this.username = "User",
@@ -19,7 +21,9 @@ class User {
     this.lastStudyDate,
     this.level = 1,
     this.xpToNextLevel = 25,
-  }) : userId = userId ?? const Uuid().v4();
+    List<String>? friends,
+  }) : friends = friends ?? [],
+       userId = userId ?? const Uuid().v4();
 
   Map<String, dynamic> toMap() {
     return {
@@ -31,6 +35,7 @@ class User {
       'lastStudyDate': lastStudyDate?.millisecondsSinceEpoch,
       'level': level,
       'xpToNextLevel': xpToNextLevel,
+      'friends': jsonEncode(friends),
     };
   }
 
@@ -49,6 +54,9 @@ class User {
               isUtc: true,
             )
           : null,
+      friends: map['friends'] != null
+          ? List<String>.from(jsonDecode(map['friends']))
+          : [],
     );
   }
 
@@ -62,6 +70,7 @@ class User {
       'lastStudyDate': lastStudyDate?.toUtc().toIso8601String(),
       'level': level,
       'xpToNextLevel': xpToNextLevel,
+      'friends': friends,
     };
   }
 
@@ -77,6 +86,9 @@ class User {
       lastStudyDate: json['lastStudyDate'] != null
           ? DateTime.parse(json['lastStudyDate'])
           : null,
+      friends: json['friends'] != null
+          ? List<String>.from(json['friends'])
+          : [],
     );
   }
 }
