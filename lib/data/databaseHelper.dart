@@ -34,12 +34,12 @@ class DatabaseHelper {
 
     return await openDatabase(
       path,
-      version: 2,
+      version: 3,
       onCreate: _onCreate,
       onUpgrade: (db, oldVersion, newVersion) async {
-        if (oldVersion < 2) {
+        if (oldVersion < 3) {
           await db.execute(
-            "ALTER TABLE StudySession ADD COLUMN synced INTEGER NOT NULL DEFAULT 0",
+            "ALTER TABLE User ADD COLUMN friends TEXT NOT NULL DEFAULT '[]'",
           );
         }
       },
@@ -86,7 +86,8 @@ class DatabaseHelper {
     currentStreak INTEGER NOT NULL DEFAULT 0,
     lastStudyDate INTEGER,
     level INTEGER NOT NULL DEFAULT 1,
-    xpToNextLevel INTEGER NOT NULL DEFAULT 25
+    xpToNextLevel INTEGER NOT NULL DEFAULT 25,
+    friends TEXT NOT NULL DEFAULT '[]'
 );
 ''');
     await db.execute('''

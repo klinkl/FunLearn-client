@@ -12,6 +12,7 @@ class StudySessionController {
   final DatabaseHelper helper;
   final UserController userController;
   final IStudySessionApi studySessionApi;
+  final Set<String> _inFlight = {};
 
   late String userId;
   StudySessionController._internal(
@@ -77,11 +78,15 @@ class StudySessionController {
     );
 
     await helper.insertStudySession(session);
+    _inFlight.add(session.studySessionId);
 
     try {
       await studySessionApi.createStudySession(session);
       await helper.markStudySessionSynced(session.studySessionId);
-    } catch (_) {}
+    } catch (e) {
+    } finally {
+      _inFlight.remove(session.studySessionId);
+    }
 
     final lastStudy = await userController.updateUserWithStudySession(session);
     return (lastStudy, session);
@@ -93,12 +98,18 @@ class StudySessionController {
     var syncedAny = false;
 
     for (final session in pending) {
+      if (_inFlight.contains(session.studySessionId)) continue;
+
       try {
+        _inFlight.add(session.studySessionId);
+
         await studySessionApi.createStudySession(session);
         await helper.markStudySessionSynced(session.studySessionId);
         syncedAny = true;
       } catch (_) {
         break;
+      } finally {
+        _inFlight.remove(session.studySessionId);
       }
     }
 

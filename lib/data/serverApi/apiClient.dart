@@ -1,4 +1,5 @@
 import 'package:dio/dio.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 class ApiClient {
   final Dio dio;
@@ -7,7 +8,8 @@ class ApiClient {
     : dio = Dio(
         BaseOptions(
           baseUrl: baseUrl,
-          headers: const {
+          headers: {
+            'X-API-KEY': dotenv.env['API_KEY']!,
             'Content-Type': 'application/json',
             'Accept': 'application/json',
           },

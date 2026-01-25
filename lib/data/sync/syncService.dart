@@ -22,7 +22,26 @@ class SyncService {
     Stream<ConnectivityResult>? connectivityStream,
   }) : connectivityStream =
            connectivityStream ??
-           Connectivity().onConnectivityChanged.cast<ConnectivityResult>();
+           Connectivity().onConnectivityChanged.map<ConnectivityResult>((
+             event,
+           ) {
+             try {
+               if (event is List<ConnectivityResult>) {
+                 if (event.contains(ConnectivityResult.wifi)) {
+                   return ConnectivityResult.wifi;
+                 }
+                 if (event.contains(ConnectivityResult.mobile)) {
+                   return ConnectivityResult.mobile;
+                 }
+                 if (event.contains(ConnectivityResult.ethernet)) {
+                   return ConnectivityResult.ethernet;
+                 }
+                 return ConnectivityResult.none;
+               }
+             } catch (_) {
+               return ConnectivityResult.none;
+             }
+           });
 
   Future<void> syncNow() => _trySync();
 
