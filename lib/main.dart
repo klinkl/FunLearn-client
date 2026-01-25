@@ -8,6 +8,7 @@ import 'package:funlearn_client/data/userController.dart';
 import 'package:funlearn_client/data/questController.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 import 'data/databaseHelper.dart';
 import './data/serverApi/apiClient.dart';
@@ -38,6 +39,7 @@ class AppDeps {
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
+  await dotenv.load(fileName: ".env");
   final prefs = await SharedPreferences.getInstance();
   final saved = prefs.getString('themeMode') ?? 'light';
 
@@ -53,7 +55,7 @@ void main() async {
 Future<AppDeps> initApplication() async {
   final dbHelper = DatabaseHelper(dbPath: 'database.db');
   //dbHelper.resetDatabase();
-  final apiClient = ApiClient(baseUrl: 'http://localhost:8080');
+  final apiClient = ApiClient(baseUrl: 'http://89.168.93.106:8080');
   final usersApi = UsersApi(apiClient.dio);
   final studySessionApi = StudySessionApi(apiClient.dio);
   final questApi = QuestsApi(apiClient.dio);
