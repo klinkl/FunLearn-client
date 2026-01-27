@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:funlearn_client/data/questController.dart';
+import 'package:funlearn_client/data/userController.dart';
 import 'learning_view.dart';
 import 'cards_list_view.dart';
 import 'quest_view.dart';
@@ -14,6 +15,7 @@ class HomeView extends StatefulWidget {
   final ThemeMode themeMode;
   final ValueChanged<ThemeMode> onThemeModeChanged;
   final DatabaseHelper dbHelper;
+  final UserController userController;
   final LearningController learningController;
   final QuestController questController;
 
@@ -22,6 +24,7 @@ class HomeView extends StatefulWidget {
     required this.themeMode,
     required this.onThemeModeChanged,
     required this.dbHelper,
+    required this.userController,
     required this.learningController,
     required this.questController,
   });
@@ -54,6 +57,7 @@ class _HomeViewState extends State<HomeView> {
       LeaderboardView(
         themeMode: widget.themeMode,
         onThemeModeChanged: widget.onThemeModeChanged,
+        userController: widget.userController,
       ),
       SettingView(
         themeMode: widget.themeMode,

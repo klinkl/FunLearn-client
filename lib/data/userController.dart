@@ -9,6 +9,9 @@ class UserController {
   final DatabaseHelper helper;
   final UsersApi usersApi;
 
+  User? _currentUser;
+  User? get currentUser => _currentUser;
+
   UserController._internal(this.helper, this.usersApi);
   static UserController getInstance(DatabaseHelper helper, UsersApi usersApi) {
     return _instance ??= UserController._internal(helper, usersApi);
@@ -23,11 +26,13 @@ class UserController {
       try {
         final remoteUser = await usersApi.getUserById(localUser.userId);
         await helper.upsertUser(remoteUser);
+        _currentUser = remoteUser;
         return remoteUser;
       } catch (e) {
         try {
           await usersApi.createUser(localUser);
         } catch (_) {}
+        _currentUser = localUser;
         return localUser;
       }
     }
@@ -46,7 +51,7 @@ class UserController {
     try {
       await usersApi.createUser(newUser);
     } catch (_) {}
-
+    _currentUser = newUser;
     return newUser;
   }
 
@@ -108,6 +113,45 @@ class UserController {
     } catch (_) {
       return null;
     }
+  }
+
+  Future<List<User>> fetchGlobalLeaderboard({bool forceRefresh = true}) async {
+    //if connection, refresh users from server
+    if (forceRefresh) {
+      try {
+        final remoteUsers = await usersApi.getAllUsers();
+
+        for (final user in remoteUsers) {
+          await helper.upsertUser(user);
+        }
+
+        remoteUsers.sort((a, b) => b.totalXP.compareTo(a.totalXP));
+        return remoteUsers;
+      } catch (e) {
+        final localUsers = await helper.getAllUsers();
+        localUsers.sort((a, b) => b.totalXP.compareTo(a.totalXP));
+        return localUsers;
+      }
+    }
+
+    //local users only
+    final localUsers = await helper.getAllUsers();
+    localUsers.sort((a, b) => b.totalXP.compareTo(a.totalXP));
+    return localUsers;
+  }
+
+  Future<List<User>> fetchFriendsLeaderboard(List<String> friendsIds) async {
+    final global = await fetchGlobalLeaderboard();
+    final set = friendsIds.toSet();
+
+    final me = currentUser;
+    if (me != null) {
+      set.add(me.userId);
+    }
+
+    final friends = global.where((u) => set.contains(u.userId)).toList();
+    friends.sort((a, b) => b.totalXP.compareTo(a.totalXP));
+    return friends;
   }
 
   @visibleForTesting
