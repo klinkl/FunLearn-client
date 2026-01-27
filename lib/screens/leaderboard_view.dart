@@ -3,16 +3,19 @@ import '../data/databaseHelper.dart';
 import '../data/models/user.dart';
 import '../theme/customColors.dart';
 import '../widgets/user_info.dart';
+import '../data/userController.dart';
 
 class LeaderboardView extends StatefulWidget {
   const LeaderboardView({
     super.key,
     required this.themeMode,
     required this.onThemeModeChanged,
+    required this.userController,
   });
 
   final ThemeMode themeMode;
   final ValueChanged<ThemeMode> onThemeModeChanged;
+  final UserController userController;
 
   @override
   State<LeaderboardView> createState() => _LeaderBoardState();
@@ -22,26 +25,40 @@ class _LeaderBoardState extends State<LeaderboardView> {
   bool _world = false;
   List<User> _users = [];
   bool _loading = true;
-  final DatabaseHelper dbHelper = DatabaseHelper(dbPath: 'database.db');
 
   @override
   void initState() {
     super.initState();
-    _loadUsers();
+    _reload();
   }
-  Future<void> _loadUsers() async {
-    final users = await dbHelper.getAllUsers();
-    users.sort((a, b) => b.totalXP.compareTo(a.totalXP));
-    setState(() {
-      _users = users;
-      _loading = false;
-    });
+
+  Future<void> _reload() async {
+    setState(() => _loading = true);
+
+    try {
+      final users = _world
+          ? await widget.userController.fetchGlobalLeaderboard()
+          : await widget.userController.fetchFriendsLeaderboard(
+              widget.userController.currentUser!.friends,
+            );
+
+      setState(() {
+        _users = users;
+        _loading = false;
+      });
+    } catch (e) {
+      setState(() {
+        _users = [];
+        _loading = false;
+      });
+    }
   }
 
   void _onButtonTap() {
     setState(() {
       _world = !_world;
     });
+    _reload();
   }
 
   @override
@@ -49,9 +66,7 @@ class _LeaderBoardState extends State<LeaderboardView> {
     final cs = Theme.of(context).colorScheme;
     final customColors = Theme.of(context).extension<CustomColors>()!;
     if (_loading) {
-      return Scaffold(
-        body: Center(child: CircularProgressIndicator()),
-      );
+      return Scaffold(body: Center(child: CircularProgressIndicator()));
     }
     return Scaffold(
       body: Center(

@@ -206,6 +206,7 @@ class _MyAppState extends State<MyApp> {
         themeMode: _themeMode,
         onThemeModeChanged: _setThemeMode,
         dbHelper: widget.deps.dbHelper,
+        userController: widget.deps.userController,
         learningController: widget.deps.learningController,
         questController: widget.deps.questController,
       ),
