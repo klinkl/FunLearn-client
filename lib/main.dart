@@ -16,9 +16,12 @@ import './data/serverApi/usersApi.dart';
 import './data/studySessionController.dart';
 import './data/learningController.dart';
 import './data/sync/syncService.dart';
+import './data/service/batteryGate.dart';
 
 import 'screens/home.dart';
 import '../theme/customColors.dart';
+import 'package:battery_plus/battery_plus.dart';
+import 'dart:async';
 
 class AppDeps {
   final DatabaseHelper dbHelper;
@@ -55,7 +58,14 @@ void main() async {
 Future<AppDeps> initApplication() async {
   final dbHelper = DatabaseHelper(dbPath: 'database.db');
   //dbHelper.resetDatabase();
-  final apiClient = ApiClient(baseUrl: 'http://89.168.93.106:8080');
+  final batteryGate = BatteryGate(criticalThreshold: 5);
+  await batteryGate.start();
+
+  final apiClient = ApiClient(
+    baseUrl: 'http://89.168.93.106:8080',
+    batteryGate: batteryGate,
+  );
+
   final usersApi = UsersApi(apiClient.dio);
   final studySessionApi = StudySessionApi(apiClient.dio);
   final questApi = QuestsApi(apiClient.dio);
@@ -77,6 +87,7 @@ Future<AppDeps> initApplication() async {
     studySessionController: studySessionController,
     questController: questController,
     dbHelper: dbHelper,
+    batteryGate: batteryGate,
   );
 
   await syncService.syncNow();
@@ -120,18 +131,55 @@ class MyApp extends StatefulWidget {
 
 class _MyAppState extends State<MyApp> {
   late ThemeMode _themeMode;
+  ThemeMode _effectiveThemeMode = ThemeMode.system;
+
+  final Battery _battery = Battery();
+  StreamSubscription<BatteryState>? _batterySub;
+  Timer? _batteryPoll;
+
+  static const int _lowBatteryThreshold = 15;
 
   @override
   void initState() {
     super.initState();
+
     _themeMode = widget.initialMode;
+    _effectiveThemeMode = _themeMode;
+
     widget.deps.syncService.start();
+
+    _recomputeTheme();
+
+    _batterySub = _battery.onBatteryStateChanged.listen((_) {
+      _recomputeTheme();
+    });
+
+    _batteryPoll = Timer.periodic(const Duration(minutes: 2), (_) {
+      _recomputeTheme();
+    });
   }
 
   @override
   void dispose() {
+    _batterySub?.cancel();
+    _batteryPoll?.cancel();
     widget.deps.syncService.dispose();
     super.dispose();
+  }
+
+  Future<void> _recomputeTheme() async {
+    final level = await _battery.batteryLevel;
+    final state = await _battery.batteryState;
+
+    final isCharging =
+        state == BatteryState.charging || state == BatteryState.full;
+    final shouldForceDark = level <= _lowBatteryThreshold && !isCharging;
+
+    final next = shouldForceDark ? ThemeMode.dark : _themeMode;
+
+    if (next != _effectiveThemeMode && mounted) {
+      setState(() => _effectiveThemeMode = next);
+    }
   }
 
   Future<void> _setThemeMode(ThemeMode mode) async {
@@ -145,6 +193,7 @@ class _MyAppState extends State<MyApp> {
           ? 'dark'
           : 'system',
     );
+    await _recomputeTheme();
   }
 
   @override
@@ -201,7 +250,7 @@ class _MyAppState extends State<MyApp> {
           ),
         ],
       ),
-      themeMode: _themeMode,
+      themeMode: _effectiveThemeMode,
       home: HomeView(
         themeMode: _themeMode,
         onThemeModeChanged: _setThemeMode,

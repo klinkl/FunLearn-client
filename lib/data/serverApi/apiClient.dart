@@ -1,10 +1,11 @@
 import 'package:dio/dio.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import '../service/batteryGate.dart';
 
 class ApiClient {
   final Dio dio;
 
-  ApiClient({required String baseUrl})
+  ApiClient({required String baseUrl, required BatteryGate batteryGate})
     : dio = Dio(
         BaseOptions(
           baseUrl: baseUrl,
@@ -18,6 +19,21 @@ class ApiClient {
           sendTimeout: const Duration(seconds: 10),
         ),
       ) {
-    dio.interceptors.add(LogInterceptor(requestBody: true, responseBody: true));
+    dio.interceptors.add(
+      InterceptorsWrapper(
+        onRequest: (options, handler) {
+          if (!batteryGate.networkAllowed) {
+            return handler.reject(
+              DioException(
+                requestOptions: options,
+                type: DioExceptionType.cancel,
+                error: 'Battery critical: network disabled',
+              ),
+            );
+          }
+          return handler.next(options);
+        },
+      ),
+    );
   }
 }
