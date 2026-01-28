@@ -62,6 +62,7 @@ class _HomeViewState extends State<HomeView> {
       SettingView(
         themeMode: widget.themeMode,
         onThemeModeChanged: widget.onThemeModeChanged,
+        userController: widget.userController,
       ),
     ];
   }
