@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_expandable_fab/flutter_expandable_fab.dart';
+import 'package:funlearn_client/screens/friend_add_view.dart';
 import '../data/databaseHelper.dart';
 import '../data/models/user.dart';
 import '../theme/customColors.dart';
@@ -103,11 +105,47 @@ class _LeaderBoardState extends State<LeaderboardView> {
           ],
         ),
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: _onButtonTap,
-        backgroundColor: customColors.addButton,
-        tooltip: _world ? 'World Leaderboard' : 'Friend Leaderboard',
-        child: Icon(_world ? Icons.group : Icons.public),
+      floatingActionButtonLocation: ExpandableFab.location,
+      floatingActionButtonAnimator: FloatingActionButtonAnimator.noAnimation,
+      floatingActionButton: ExpandableFab(
+        type: ExpandableFabType.up,
+        distance: 70,
+        childrenAnimation: ExpandableFabAnimation.none,
+        overlayStyle: ExpandableFabOverlayStyle(
+          color: Colors.white.withOpacity(0.9),
+        ),
+        children: [
+          Row(
+            children: [
+              Text('Add new friends'),
+              SizedBox(width: 20),
+              FloatingActionButton.small(
+                heroTag: 'addFriends',
+                onPressed: () async {
+                  await Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (_) => FriendAddView()),
+                  );
+                  //await _loadDecks();
+                },
+                child: const Icon(Icons.add),
+              ),
+            ],
+          ),
+          Row(
+            children: [
+              Text('Switch between global/friends leaderboard'),
+              SizedBox(width: 20),
+              FloatingActionButton.small(
+                heroTag: 'toggleWorld',
+                onPressed: _onButtonTap,
+                backgroundColor: customColors.addButton,
+                tooltip: _world ? 'World Leaderboard' : 'Friend Leaderboard',
+                child: Icon(_world ? Icons.group : Icons.public),
+              ),
+            ],
+          ),
+        ],
       ),
     );
   }
