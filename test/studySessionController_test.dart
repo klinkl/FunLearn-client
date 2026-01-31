@@ -1,6 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:fsrs/fsrs.dart';
 import 'package:funlearn_client/data/databaseHelper.dart';
+import 'package:funlearn_client/data/models/friendRequest.dart';
 import 'package:funlearn_client/data/models/studySession.dart';
 import 'package:funlearn_client/data/models/user.dart';
 import 'package:funlearn_client/data/studySessionController.dart';
@@ -28,7 +29,11 @@ class FakeStudySessionApi implements IStudySessionApi {
 
 class FakeUsersApi implements UsersApi {
   final Map<String, User> _remote = {};
+  final Map<String, FriendRequest> _requests = {};
   bool throwOnGet = false;
+
+  String _reqKey(String fromUser, String toUser) => '$fromUser::$toUser';
+  String _reqKeyFromReq(FriendRequest r) => _reqKey(r.fromUser, r.toUser);
 
   void reset() {
     _remote.clear();
@@ -36,6 +41,8 @@ class FakeUsersApi implements UsersApi {
   }
 
   void seedUser(User u) => _remote[u.userId] = u;
+
+  void seedRequest(FriendRequest r) => _requests[_reqKeyFromReq(r)] = r;
 
   @override
   Future<User> getUserById(String id) async {
@@ -58,6 +65,36 @@ class FakeUsersApi implements UsersApi {
   @override
   Future<void> updateUser(User user) async {
     _remote[user.userId] = user;
+  }
+
+  @override
+  Future<void> deleteFriendRequest(FriendRequest request) async {
+    _requests.remove(_reqKeyFromReq(request));
+  }
+
+  @override
+  Future<List<FriendRequest>> getReceived(String id) async {
+    return _requests.values.where((r) => r.toUser == id).toList();
+  }
+
+  @override
+  Future<List<FriendRequest>> getSent(String id) async{
+    return _requests.values.where((r) => r.fromUser == id).toList();
+  }
+
+  @override
+  Future<void> sendFriendRequest(FriendRequest request) async{
+    final key = _reqKeyFromReq(request);
+    _requests[key] = request;
+  }
+
+  @override
+  Future<void> updateFriendRequest(FriendRequest request) async{
+    final key = _reqKeyFromReq(request);
+    if (!_requests.containsKey(key)) {
+      throw Exception('Friend request not found');
+    }
+    _requests[key] = request;
   }
 }
 

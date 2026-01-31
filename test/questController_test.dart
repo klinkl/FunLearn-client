@@ -360,7 +360,7 @@ void main() {
 
   test("updateQuestsWithStudySession streak completion test", () async {
     final user = (await dbHelper.getAllUsers()).first;
-    final now = DateTime.now().toUtc();
+    final now = DateTime.utc(2026, 1, 29, 14, 30, 0);
 
     final quest = ModelQuest(
       userIds: [user.userId],
