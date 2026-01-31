@@ -25,8 +25,7 @@ class SampleCard extends StatelessWidget {
       height: 100,
       child: InkWell(
         borderRadius: BorderRadius.circular(12),
-        onTap: () {
-        },
+        onTap: () {},
         child: Card(
           color: customColors.card,
           child: Center(

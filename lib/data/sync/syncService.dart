@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:funlearn_client/data/databaseHelper.dart';
+import 'package:funlearn_client/data/service/batteryGate.dart';
 import 'package:funlearn_client/data/studySessionController.dart';
 import 'package:funlearn_client/data/questController.dart';
 
@@ -9,6 +10,7 @@ class SyncService {
   final StudySessionController studySessionController;
   final QuestController questController;
   final DatabaseHelper dbHelper;
+  final BatteryGate batteryGate;
   final Stream<ConnectivityResult> connectivityStream; //for test
 
   bool _syncInProgress = false;
@@ -19,6 +21,7 @@ class SyncService {
     required this.studySessionController,
     required this.questController,
     required this.dbHelper,
+    required this.batteryGate,
     Stream<ConnectivityResult>? connectivityStream,
   }) : connectivityStream =
            connectivityStream ??
@@ -48,10 +51,12 @@ class SyncService {
   Future<void> start() async {
     await _trySync();
 
-    _sub = connectivityStream.listen((result) {
-      if (result != ConnectivityResult.none) {
-        _trySync();
+    _sub = connectivityStream.listen((result) async {
+      if (result == ConnectivityResult.none) {
+        await questController.createQuestsWhenOffline();
+        return;
       }
+      _trySync();
     });
   }
 
@@ -61,6 +66,7 @@ class SyncService {
   }
 
   Future<void> _trySync() async {
+    if (!batteryGate.networkAllowed) return;
     if (_syncInProgress) return;
 
     if (_lastFailure != null) {
@@ -70,7 +76,9 @@ class SyncService {
 
     _syncInProgress = true;
     try {
+      await questController.syncClientQuestsIfAny();
       await studySessionController.syncPendingSessions();
+
       final stillPending = await dbHelper.getPendingStudySessions();
 
       if (stillPending.isEmpty) {
