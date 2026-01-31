@@ -121,22 +121,20 @@ class _CardsListViewState extends State<CardsListView> {
                     childAspectRatio: 2,
                   ),
                   itemBuilder: (context, index) {
-                    return Card(
-                      child: _SampleCard(
-                        cardName: decks[index].name,
-                        onTap: () async {
-                          await Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (_) => LearningView(
-                                deck: decks[index],
-                                learningController: widget.learningController,
-                              ),
+                    return _SampleCard(
+                      cardName: decks[index].name,
+                      onTap: () async {
+                        await Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => LearningView(
+                              deck: decks[index],
+                              learningController: widget.learningController,
                             ),
-                          );
-                          await _loadUser();
-                        },
-                      ),
+                          ),
+                        );
+                        await _loadUser();
+                      },
                     );
                   },
                 ),
@@ -145,7 +143,6 @@ class _CardsListViewState extends State<CardsListView> {
           ],
         ),
       ),
-      //maybe use the floatingActionButton as a button to add new Anki sets?
       floatingActionButtonLocation: ExpandableFab.location,
       floatingActionButton: ExpandableFab(
         type: ExpandableFabType.up,
@@ -199,12 +196,35 @@ class _SampleCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return InkWell(
-      onTap: onTap,
-      child: SizedBox(
-        width: 150,
-        height: 100,
-        child: Center(child: Text(cardName)),
+    final cs = Theme.of(context).colorScheme;
+
+    const radius = 12.0;
+
+    return Container(
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(radius),
+        border: Border.all(color: cs.primary, width: 2),
+      ),
+      child: Material(
+        color: Theme.of(context).cardColor,
+        borderRadius: BorderRadius.circular(radius),
+        child: InkWell(
+          borderRadius: BorderRadius.circular(radius),
+          onTap: onTap,
+          child: SizedBox(
+            width: 150,
+            height: 100,
+            child: Center(
+              child: Text(
+                cardName,
+                style: TextStyle(
+                  color: cs.onSurface,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+          ),
+        ),
       ),
     );
   }

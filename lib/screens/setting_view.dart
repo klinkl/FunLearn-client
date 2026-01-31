@@ -163,22 +163,23 @@ class _SettingViewState extends State<SettingView> {
         final cs = Theme.of(context).colorScheme;
         final customColors = Theme.of(context).extension<CustomColors>()!;
 
-        final isLightActive = widget.themeMode == ThemeMode.light;
-        final isDarkActive = widget.themeMode == ThemeMode.dark;
+        final isLightActive = Theme.of(context).brightness == Brightness.light;
+        final isDarkActive = Theme.of(context).brightness == Brightness.dark;
 
         ButtonStyle adaptiveButtonStyle(bool active) {
           return ElevatedButton.styleFrom(
-            backgroundColor: active ? cs.primary : cs.surface,
-            foregroundColor: active ? cs.onPrimary : cs.onSurface,
+            backgroundColor: cs.surface,
+            foregroundColor: cs.onSurface,
+
             padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 10),
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(12),
               side: BorderSide(
-                color: active ? cs.primary : cs.onSurface.withOpacity(0.4),
-                width: active ? 2 : 1,
+                color: active ? cs.primary : cs.onSurface.withOpacity(0.25),
+                width: active ? 3 : 1,
               ),
             ),
-            elevation: active ? 6 : 0,
+            elevation: active ? 3 : 0,
           );
         }
 
@@ -201,20 +202,26 @@ class _SettingViewState extends State<SettingView> {
             child: ElevatedButton(
               onPressed: onPressed,
               style: adaptiveButtonStyle(active),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
+              child: Stack(
                 children: [
-                  Icon(icon, size: iconSize),
-                  const SizedBox(height: 8),
-                  FittedBox(
-                    fit: BoxFit.scaleDown,
-                    child: Text(
-                      label,
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                        fontSize: buttonHeight * 0.2,
-                        fontWeight: FontWeight.bold,
-                      ),
+                  Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(icon, size: iconSize),
+                        const SizedBox(height: 8),
+                        FittedBox(
+                          fit: BoxFit.scaleDown,
+                          child: Text(
+                            label,
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                              fontSize: buttonHeight * 0.2,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
                   ),
                 ],
