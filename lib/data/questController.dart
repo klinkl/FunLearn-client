@@ -38,13 +38,27 @@ class QuestController {
     }).toList();
   }
 
+  Future<bool> _canReachServer() async {
+    try {
+      //simple ping to server
+      final res = await questsApi
+          .getQuestsByUserId(userId)
+          .timeout(const Duration(seconds: 2));
+      return true;
+    } catch (_) {
+      return false;
+    }
+  }
+
   Future<void> createQuestsWhenOffline() async {
+    final online = await _canReachServer();
+    if (online) return;
+
     final currentQuests = await helper.getAllQuestsByUser(userId);
     final currentTime = DateTime.now().toUtc();
     final allExpired = currentQuests.every(
       (quest) => quest.expiryDate.isBefore(currentTime),
     );
-    //in future check if offline
     if (allExpired) {
       await helper.insertQuest(
         ModelQuest(
@@ -54,6 +68,8 @@ class QuestController {
           expiryDate: currentTime.add(const Duration(days: 2)),
           requestedValue: 100,
           friendsQuest: false,
+          origin: 'client',
+          synced: false,
         ),
       );
       await helper.insertQuest(
@@ -64,6 +80,8 @@ class QuestController {
           expiryDate: currentTime.add(const Duration(days: 2)),
           requestedValue: 20,
           friendsQuest: false,
+          origin: 'client',
+          synced: false,
         ),
       );
       await helper.insertQuest(
@@ -74,6 +92,8 @@ class QuestController {
           expiryDate: currentTime.add(const Duration(days: 7)),
           requestedValue: 3,
           friendsQuest: false,
+          origin: 'client',
+          synced: false,
         ),
       );
     }
@@ -181,12 +201,31 @@ class QuestController {
   }
 
   Future<void> refreshFromServer() async {
+    final blockRefresh = await hasActiveClientQuests();
+    if (blockRefresh) return;
+
     final remoteQuests = await questsApi.getQuestsByUserId(userId);
     await helper.deleteQuestsByUser(userId);
 
     for (final q in remoteQuests) {
       await helper.upsertQuest(q);
     }
+  }
+
+  Future<void> syncClientQuestsIfAny() async {
+    final pending = await helper.getPendingClientQuests(userId);
+    if (pending.isEmpty) return;
+
+    for (final q in pending) {
+      try {
+        await questsApi.createQuest(q);
+        await helper.markQuestSynced(q.questId);
+      } catch (_) {}
+    }
+  }
+
+  Future<bool> hasActiveClientQuests() async {
+    return helper.hasActiveClientQuests(userId, DateTime.now().toUtc());
   }
 
   @visibleForTesting

@@ -34,12 +34,20 @@ class DatabaseHelper {
 
     return await openDatabase(
       path,
-      version: 3,
+      version: 4,
       onCreate: _onCreate,
       onUpgrade: (db, oldVersion, newVersion) async {
         if (oldVersion < 3) {
           await db.execute(
             "ALTER TABLE User ADD COLUMN friends TEXT NOT NULL DEFAULT '[]'",
+          );
+        }
+        if (oldVersion < 4) {
+          await db.execute(
+            "ALTER TABLE ModelQuest ADD COLUMN synced INTEGER NOT NULL DEFAULT 0 CHECK (synced IN (0,1))",
+          );
+          await db.execute(
+            "ALTER TABLE ModelQuest ADD COLUMN origin TEXT NOT NULL DEFAULT 'server'",
           );
         }
       },
@@ -111,7 +119,9 @@ class DatabaseHelper {
     currentValue INTEGER NOT NULL DEFAULT 0,
     requestedValue INTEGER NOT NULL,
     finished INTEGER CHECK (finished IN (0,1)),
-    friendsQuest INTEGER CHECK (friendsQuest IN (0,1))
+    friendsQuest INTEGER CHECK (friendsQuest IN (0,1)),
+    synced INTEGER NOT NULL DEFAULT 0 CHECK (synced IN (0,1)),
+    origin TEXT NOT NULL DEFAULT 'server'
 );
     ''');
   }
@@ -236,6 +246,41 @@ class DatabaseHelper {
       )
       ''',
       [userId],
+    );
+  }
+
+  Future<List<ModelQuest>> getPendingClientQuests(String userId) async {
+    final db = await _instance!.database;
+
+    final maps = await db.rawQuery(
+      '''
+    SELECT * FROM ModelQuest
+    WHERE origin = 'client' AND synced = 0
+    AND EXISTS (
+      SELECT 1 FROM json_each(userIds) WHERE json_each.value = ?
+    )
+    ''',
+      [userId],
+    );
+
+    return maps.map((m) => ModelQuest.fromMap(m)).toList();
+  }
+
+  Future<int> markQuestSynced(String questId) async {
+    final db = await _instance!.database;
+    return db.update(
+      'ModelQuest',
+      {'synced': 1},
+      where: 'questId = ?',
+      whereArgs: [questId],
+    );
+  }
+
+  Future<bool> hasActiveClientQuests(String userId, DateTime nowUtc) async {
+    final quests = await getAllQuestsByUser(userId);
+    return quests.any(
+      (q) =>
+          q.origin == 'client' && !q.finished && q.expiryDate.isAfter(nowUtc),
     );
   }
 

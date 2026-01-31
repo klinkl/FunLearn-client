@@ -12,6 +12,8 @@ class ModelQuest {
   int requestedValue;
   bool finished;
   bool friendsQuest;
+  bool synced;
+  String origin; // server | client
 
   ModelQuest({
     String? questId,
@@ -23,6 +25,8 @@ class ModelQuest {
     required this.requestedValue,
     this.finished = false,
     required this.friendsQuest,
+    this.synced = false,
+    this.origin = 'server',
   }) : questId = questId ?? const Uuid().v4(),
        startDate = startDate ?? DateTime.now().toUtc();
 
@@ -37,6 +41,8 @@ class ModelQuest {
       'requestedValue': requestedValue,
       'finished': finished ? 1 : 0,
       'friendsQuest': friendsQuest ? 1 : 0,
+      'synced': synced ? 1 : 0,
+      'origin': origin,
     };
   }
 
@@ -57,6 +63,8 @@ class ModelQuest {
       requestedValue: map['requestedValue'],
       finished: map['finished'] == 0 ? false : true,
       friendsQuest: map['friendsQuest'] == 0 ? false : true,
+      synced: (map['synced'] ?? 0) == 1,
+      origin: (map['origin'] ?? 'server') as String,
     );
   }
 
@@ -87,6 +95,8 @@ class ModelQuest {
       requestedValue: (json['requestedValue'] as num).toInt(),
       finished: json['finished'] as bool? ?? false,
       friendsQuest: json['friendsQuest'] as bool? ?? false,
+      synced: true,
+      origin: 'server',
     );
   }
 }

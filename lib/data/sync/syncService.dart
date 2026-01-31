@@ -51,10 +51,12 @@ class SyncService {
   Future<void> start() async {
     await _trySync();
 
-    _sub = connectivityStream.listen((result) {
-      if (result != ConnectivityResult.none) {
-        _trySync();
+    _sub = connectivityStream.listen((result) async {
+      if (result == ConnectivityResult.none) {
+        await questController.createQuestsWhenOffline();
+        return;
       }
+      _trySync();
     });
   }
 
@@ -74,7 +76,9 @@ class SyncService {
 
     _syncInProgress = true;
     try {
+      await questController.syncClientQuestsIfAny();
       await studySessionController.syncPendingSessions();
+
       final stillPending = await dbHelper.getPendingStudySessions();
 
       if (stillPending.isEmpty) {

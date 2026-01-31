@@ -75,6 +75,7 @@ Future<AppDeps> initApplication() async {
 
   final questController = QuestController.getInstance(dbHelper, questApi);
   await questController.init();
+  await questController.createQuestsWhenOffline();
 
   final studySessionController = StudySessionController.getInstance(
     dbHelper,
