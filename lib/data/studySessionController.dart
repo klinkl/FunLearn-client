@@ -1,8 +1,7 @@
 import 'package:flutter/cupertino.dart';
 import 'package:fsrs/fsrs.dart';
-import 'package:funlearn_client/data/userController.dart';
-import 'package:funlearn_client/data/questController.dart';
 
+import 'package:funlearn_client/data/userController.dart';
 import 'databaseHelper.dart';
 import 'models/studySession.dart';
 import './serverApi/studySessionApi.dart';
@@ -78,17 +77,18 @@ class StudySessionController {
     );
 
     await helper.insertStudySession(session);
+
     _inFlight.add(session.studySessionId);
 
     try {
       await studySessionApi.createStudySession(session);
       await helper.markStudySessionSynced(session.studySessionId);
-    } catch (e) {
+    } catch (_) {
     } finally {
       _inFlight.remove(session.studySessionId);
     }
-
     final lastStudy = await userController.updateUserWithStudySession(session);
+
     return (lastStudy, session);
   }
 

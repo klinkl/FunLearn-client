@@ -3,7 +3,6 @@ import 'package:flutter/cupertino.dart';
 
 import 'models/modelQuest.dart';
 import 'models/studySession.dart';
-import 'models/user.dart';
 import './serverApi/questApi.dart';
 
 class QuestController {
@@ -31,17 +30,15 @@ class QuestController {
 
   Future<List<ModelQuest>> getRelevantQuests() async {
     final currentQuests = await helper.getAllQuestsByUser(userId);
-    // only see quests that havent expired or expired in the last 12 hours
     final cutoff = DateTime.now().toUtc().subtract(const Duration(hours: 12));
-    return currentQuests.where((quest) {
-      return quest.expiryDate.isAfter(cutoff);
-    }).toList();
+    return currentQuests
+        .where((quest) => quest.expiryDate.isAfter(cutoff))
+        .toList();
   }
 
   Future<bool> _canReachServer() async {
     try {
-      //simple ping to server
-      final res = await questsApi
+      await questsApi
           .getQuestsByUserId(userId)
           .timeout(const Duration(seconds: 2));
       return true;
@@ -56,47 +53,50 @@ class QuestController {
 
     final currentQuests = await helper.getAllQuestsByUser(userId);
     final currentTime = DateTime.now().toUtc();
+
     final allExpired = currentQuests.every(
       (quest) => quest.expiryDate.isBefore(currentTime),
     );
-    if (allExpired) {
-      await helper.insertQuest(
-        ModelQuest(
-          userIds: [userId],
-          questType: QuestType.XP,
-          startDate: currentTime,
-          expiryDate: currentTime.add(const Duration(days: 2)),
-          requestedValue: 100,
-          friendsQuest: false,
-          origin: 'client',
-          synced: false,
-        ),
-      );
-      await helper.insertQuest(
-        ModelQuest(
-          userIds: [userId],
-          questType: QuestType.CardsLearnt,
-          startDate: currentTime,
-          expiryDate: currentTime.add(const Duration(days: 2)),
-          requestedValue: 20,
-          friendsQuest: false,
-          origin: 'client',
-          synced: false,
-        ),
-      );
-      await helper.insertQuest(
-        ModelQuest(
-          userIds: [userId],
-          questType: QuestType.Streak,
-          startDate: currentTime,
-          expiryDate: currentTime.add(const Duration(days: 7)),
-          requestedValue: 3,
-          friendsQuest: false,
-          origin: 'client',
-          synced: false,
-        ),
-      );
-    }
+    if (!allExpired) return;
+
+    await helper.insertQuest(
+      ModelQuest(
+        userIds: [userId],
+        questType: QuestType.XP,
+        startDate: currentTime,
+        expiryDate: currentTime.add(const Duration(days: 2)),
+        requestedValue: 100,
+        friendsQuest: false,
+        origin: 'client',
+        synced: false,
+      ),
+    );
+
+    await helper.insertQuest(
+      ModelQuest(
+        userIds: [userId],
+        questType: QuestType.CardsLearnt,
+        startDate: currentTime,
+        expiryDate: currentTime.add(const Duration(days: 2)),
+        requestedValue: 20,
+        friendsQuest: false,
+        origin: 'client',
+        synced: false,
+      ),
+    );
+
+    await helper.insertQuest(
+      ModelQuest(
+        userIds: [userId],
+        questType: QuestType.Streak,
+        startDate: currentTime,
+        expiryDate: currentTime.add(const Duration(days: 7)),
+        requestedValue: 3,
+        friendsQuest: false,
+        origin: 'client',
+        synced: false,
+      ),
+    );
   }
 
   Future<void> updateQuestsWithStudySession(
@@ -128,6 +128,8 @@ class QuestController {
               questId: quest.questId,
               currentValue: newValue,
               finished: finished,
+              origin: quest.origin,
+              synced: quest.synced,
             ),
           );
           break;
@@ -150,6 +152,8 @@ class QuestController {
               questId: quest.questId,
               currentValue: newValue,
               finished: finished,
+              origin: quest.origin,
+              synced: quest.synced,
             ),
           );
           break;
@@ -177,10 +181,7 @@ class QuestController {
             }
           }
 
-          var finished = false;
-          if (newStreak >= quest.requestedValue) {
-            finished = true;
-          }
+          final finished = newStreak >= quest.requestedValue;
 
           await helper.updateQuest(
             ModelQuest(
@@ -193,6 +194,8 @@ class QuestController {
               questId: quest.questId,
               currentValue: newStreak,
               finished: finished,
+              origin: quest.origin,
+              synced: quest.synced,
             ),
           );
           break;
@@ -200,11 +203,25 @@ class QuestController {
     }
   }
 
+  Future<bool> hasActiveClientQuests() async {
+    final nowUtc = DateTime.now().toUtc();
+    final quests = await helper.getAllQuestsByUser(userId);
+
+    return quests.any((q) {
+      final isClient = q.origin == 'client';
+      final isActive = !q.finished && q.expiryDate.isAfter(nowUtc);
+      final notSyncedYet = q.synced == false;
+      return isClient && isActive && notSyncedYet;
+    });
+  }
+
   Future<void> refreshFromServer() async {
     final blockRefresh = await hasActiveClientQuests();
     if (blockRefresh) return;
 
     final remoteQuests = await questsApi.getQuestsByUserId(userId);
+
+    // Safe because we only allow refresh when there are no active UNSYNCED client quests.
     await helper.deleteQuestsByUser(userId);
 
     for (final q in remoteQuests) {
@@ -222,10 +239,6 @@ class QuestController {
         await helper.markQuestSynced(q.questId);
       } catch (_) {}
     }
-  }
-
-  Future<bool> hasActiveClientQuests() async {
-    return helper.hasActiveClientQuests(userId, DateTime.now().toUtc());
   }
 
   @visibleForTesting

@@ -1,6 +1,7 @@
 import 'package:dio/dio.dart';
 import '../models/modelQuest.dart';
 
+//for testing
 abstract class IQuestsApi {
   Future<List<ModelQuest>> getQuestsByUserId(String userId);
   Future<ModelQuest> getQuestById(String questId);

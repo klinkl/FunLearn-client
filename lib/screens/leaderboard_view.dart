@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_expandable_fab/flutter_expandable_fab.dart';
 import 'package:funlearn_client/screens/friend_add_view.dart';
-import '../data/databaseHelper.dart';
 import '../data/models/user.dart';
 import '../theme/customColors.dart';
 import '../widgets/user_info.dart';

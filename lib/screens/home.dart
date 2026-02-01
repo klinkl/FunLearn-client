@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:funlearn_client/data/questController.dart';
 import 'package:funlearn_client/data/userController.dart';
-import 'learning_view.dart';
 import 'cards_list_view.dart';
 import 'quest_view.dart';
 import 'leaderboard_view.dart';

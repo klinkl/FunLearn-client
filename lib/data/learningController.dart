@@ -1,9 +1,9 @@
 import 'package:fsrs/fsrs.dart';
 import 'package:flutter/cupertino.dart';
+
 import 'package:funlearn_client/data/databaseHelper.dart';
 import 'package:funlearn_client/data/models/flashcard.dart';
 import 'package:funlearn_client/data/models/deck.dart';
-import 'package:funlearn_client/data/models/user.dart';
 import 'package:funlearn_client/data/questController.dart';
 import 'package:funlearn_client/data/serverApi/questApi.dart';
 import 'package:funlearn_client/data/serverApi/studySessionApi.dart';

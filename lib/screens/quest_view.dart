@@ -49,7 +49,7 @@ class _QuestViewState extends State<QuestView> {
     return Center(
       child: ListView(
         children: [
-          ListTile(title: Text('Daily Quests')),
+          ListTile(title: Text('Solo Quests')),
           SizedBox(height: 12),
           ..._quests.map((quest) {
             return ListTile(

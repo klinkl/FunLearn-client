@@ -1,17 +1,12 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:funlearn_client/data/apkgImport/ankiDbWriter.dart';
-import 'package:funlearn_client/data/learningController.dart';
-import 'package:funlearn_client/data/userController.dart';
-import 'package:funlearn_client/screens/learning_view.dart';
-import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 import 'package:flutter_expandable_fab/flutter_expandable_fab.dart';
 
+import 'package:funlearn_client/data/apkgImport/ankiDbWriter.dart';
+import 'package:funlearn_client/data/learningController.dart';
+import 'package:funlearn_client/screens/learning_view.dart';
 import '../theme/customColors.dart';
 import './card_creation_view.dart';
-
-import '../widgets/user_info.dart';
-import '../widgets/sample_card.dart';
 
 import '../data/models/user.dart';
 import '../data/apkgImport/ankiDbReader.dart';
@@ -20,6 +15,7 @@ import '../data/apkgImport/apkgImportService.dart';
 import '../data/apkgImport/apkgSource.dart';
 import '../data/databaseHelper.dart';
 import '../data/models/deck.dart';
+import '../widgets/user_info.dart';
 
 class CardsListView extends StatefulWidget {
   const CardsListView({

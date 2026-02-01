@@ -3,7 +3,6 @@ import 'package:funlearn_client/data/models/deck.dart';
 import 'package:funlearn_client/data/models/studySession.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart';
-import 'package:sqflite/sqflite.dart' as databaseFactoryFfi;
 
 import 'models/modelQuest.dart';
 import 'models/flashcard.dart';
@@ -126,6 +125,8 @@ class DatabaseHelper {
     ''');
   }
 
+  /////////////////////////////// Study Session ////////////////////////////////
+
   Future<int> insertStudySession(StudySession studySession) async {
     final db = await _instance!.database;
     return await db.insert('StudySession', studySession.toMap());
@@ -169,19 +170,7 @@ class DatabaseHelper {
     );
   }
 
-  Future<User?> getUserById(String userId) async {
-    final db = await _instance!.database;
-    final user = await db.query(
-      'User',
-      where: 'userId = ?',
-      whereArgs: [userId],
-    );
-    if (user.isNotEmpty) {
-      return User.fromMap(user.first);
-    } else {
-      return null;
-    }
-  }
+  //////////////////////////////// Quest ///////////////////////////////////////
 
   Future<List<ModelQuest>> getAllQuestsByUser(String userId) async {
     final db = await _instance!.database;
@@ -270,7 +259,7 @@ class DatabaseHelper {
     final db = await _instance!.database;
     return db.update(
       'ModelQuest',
-      {'synced': 1},
+      {'synced': 1, 'origin': 'server'},
       where: 'questId = ?',
       whereArgs: [questId],
     );
@@ -280,8 +269,27 @@ class DatabaseHelper {
     final quests = await getAllQuestsByUser(userId);
     return quests.any(
       (q) =>
-          q.origin == 'client' && !q.finished && q.expiryDate.isAfter(nowUtc),
+          q.origin == 'client' &&
+          q.synced == false &&
+          !q.finished &&
+          q.expiryDate.isAfter(nowUtc),
     );
+  }
+
+  //////////////////////////////// User ////////////////////////////////////////
+
+  Future<User?> getUserById(String userId) async {
+    final db = await _instance!.database;
+    final user = await db.query(
+      'User',
+      where: 'userId = ?',
+      whereArgs: [userId],
+    );
+    if (user.isNotEmpty) {
+      return User.fromMap(user.first);
+    } else {
+      return null;
+    }
   }
 
   Future<List<User>> getAllUsers() async {
@@ -329,6 +337,8 @@ class DatabaseHelper {
       );
     }
   }
+
+  //////////////////////////////// Card/Deck ///////////////////////////////////
 
   Future<int> deleteCard(int cardId) async {
     final db = await _instance!.database;
@@ -426,20 +436,6 @@ class DatabaseHelper {
     );
   }
 
-  Future<void> resetDatabase() async {
-    final dbFolder = await getDatabasesPath();
-    final path = join(dbFolder, dbPath);
-
-    if (_database != null) {
-      await _database!.close();
-      _database = null;
-    }
-
-    await deleteDatabase(path);
-
-    _database = await _initDatabase();
-  }
-
   Future<List<Flashcard>> fetchDueCards(int deckId) async {
     final db = await database;
     final now = DateTime.now().toUtc().millisecondsSinceEpoch;
@@ -452,6 +448,22 @@ class DatabaseHelper {
     );
 
     return maps.map((map) => Flashcard.fromMap(map)).toList();
+  }
+
+  //////////////////////////////// DataBase ////////////////////////////////////
+
+  Future<void> resetDatabase() async {
+    final dbFolder = await getDatabasesPath();
+    final path = join(dbFolder, dbPath);
+
+    if (_database != null) {
+      await _database!.close();
+      _database = null;
+    }
+
+    await deleteDatabase(path);
+
+    _database = await _initDatabase();
   }
 
   Future<void> closeDatabase() async {

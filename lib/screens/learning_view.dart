@@ -1,13 +1,10 @@
 import 'package:flutter/material.dart';
 import '../theme/customColors.dart';
-//temporary
-////////////////////////////////////////////////////////
+
 import 'package:fsrs/fsrs.dart' show Scheduler, Rating;
 import 'package:funlearn_client/data/models/deck.dart';
 import 'package:funlearn_client/data/models/flashcard.dart';
-
 import '../data/learningController.dart';
-import '../data/databaseHelper.dart';
 
 class MyFlashcardScreen extends StatelessWidget {
   const MyFlashcardScreen({

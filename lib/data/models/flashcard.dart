@@ -1,7 +1,5 @@
 import 'package:fsrs/fsrs.dart';
 
-import '../databaseHelper.dart';
-
 class Flashcard {
   int? cardId;
   int deckId;
@@ -27,8 +25,7 @@ class Flashcard {
     this.difficulty,
     this.lastReview,
     bool? isNew,
-  }) : isNew = isNew ?? true
-  {
+  }) : isNew = isNew ?? true {
     if (state == State.learning && step == null) {
       step = 0;
     }
@@ -67,7 +64,7 @@ class Flashcard {
       lastReview: map['lastReview'] != null
           ? DateTime.fromMillisecondsSinceEpoch(map['lastReview'], isUtc: true)
           : null,
-      isNew: map['isNew'] == 0 ? false : true
+      isNew: map['isNew'] == 0 ? false : true,
     );
   }
   Card toFsrsCard(Flashcard card) {

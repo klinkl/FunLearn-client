@@ -24,23 +24,32 @@ class UsersApi {
   Future<void> updateUser(User user) async {
     await _dio.put('/api/users/', data: user.toJson());
   }
+
   Future<void> sendFriendRequest(FriendRequest request) async {
     await _dio.post('/api/users/friend/', data: request.toJson());
   }
+
   Future<void> updateFriendRequest(FriendRequest request) async {
     await _dio.put('/api/users/friend/', data: request.toJson());
   }
+
   Future<void> deleteFriendRequest(FriendRequest request) async {
     await _dio.delete('/api/users/friend/', data: request.toJson());
   }
+
   Future<List<FriendRequest>> getSent(String id) async {
     final res = await _dio.get('/api/users/friend/sent/$id');
     final data = res.data as List<dynamic>;
-    return data.map((e) => FriendRequest.fromJson(e as Map<String, dynamic>)).toList();
+    return data
+        .map((e) => FriendRequest.fromJson(e as Map<String, dynamic>))
+        .toList();
   }
+
   Future<List<FriendRequest>> getReceived(String id) async {
     final res = await _dio.get('/api/users/friend/received/$id');
     final data = res.data as List<dynamic>;
-    return data.map((e) => FriendRequest.fromJson(e as Map<String, dynamic>)).toList();
+    return data
+        .map((e) => FriendRequest.fromJson(e as Map<String, dynamic>))
+        .toList();
   }
 }

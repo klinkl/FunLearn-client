@@ -1,10 +1,7 @@
-import 'package:dio/src/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:funlearn_client/data/databaseHelper.dart';
 import 'package:funlearn_client/data/models/friendRequest.dart';
 import 'package:funlearn_client/data/models/user.dart';
-import 'package:funlearn_client/data/serverApi/usersApi.dart';
 import 'package:funlearn_client/data/userController.dart';
 import '../theme/customColors.dart';
 
@@ -30,7 +27,6 @@ class _FriendAddViewState extends State<FriendAddView> {
   void initState() {
     super.initState();
     _loadLists();
-
   }
 
   Future<void> _loadLists() async {
@@ -59,6 +55,7 @@ class _FriendAddViewState extends State<FriendAddView> {
       setState(() => _listsLoading = false);
     }
   }
+
   Future<void> _copyMyUserId() async {
     final id = _myUserId;
     if (id == null || id.isEmpty) return;
@@ -66,10 +63,11 @@ class _FriendAddViewState extends State<FriendAddView> {
     await Clipboard.setData(ClipboardData(text: id));
     if (!mounted) return;
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Copied userId')),
-    );
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(const SnackBar(content: Text('Copied userId')));
   }
+
   Future<void> _onSearch() async {
     final query = _searchController.text;
     if (query.isEmpty) return;
@@ -82,8 +80,7 @@ class _FriendAddViewState extends State<FriendAddView> {
     try {
       final user = await userController.refreshFromServer(query)!;
       setState(() => _searchedUser = user);
-    }
-    catch (e) {
+    } catch (e) {
       setState(() => _searchError = e);
     } finally {
       setState(() => _searchLoading = false);
@@ -93,29 +90,33 @@ class _FriendAddViewState extends State<FriendAddView> {
   Future<void> _addFriend(User user) async {
     var self = await userController.getOrCreateUser();
     await userController.sendFriendRequest(self, user);
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Friend request sent')),
-    );
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(const SnackBar(content: Text('Friend request sent')));
     if (!mounted) return;
     await _loadLists();
   }
 
   Future<void> _acceptFriend(FriendRequest request) async {
     await userController.acceptFriendRequest(
-        FriendRequest(request.fromUser, request.toUser, true));
+      FriendRequest(request.fromUser, request.toUser, true),
+    );
     if (!mounted) return;
     await _loadLists();
   }
+
   Future<void> _declineReceived(FriendRequest request) async {
     await userController.declineFriendRequest(request);
     if (!mounted) return;
     await _loadLists();
   }
+
   Future<void> _deleteSent(FriendRequest request) async {
     await userController.declineFriendRequest(request);
     if (!mounted) return;
     await _loadLists();
   }
+
   @override
   void dispose() {
     _searchController.dispose();
@@ -124,14 +125,9 @@ class _FriendAddViewState extends State<FriendAddView> {
 
   @override
   Widget build(BuildContext context) {
-    final cs = Theme
-        .of(context)
-        .colorScheme;
+    final cs = Theme.of(context).colorScheme;
     final customColors = Theme.of(context).extension<CustomColors>()!;
-    final screenHeight = MediaQuery
-        .of(context)
-        .size
-        .height;
+    final screenHeight = MediaQuery.of(context).size.height;
     return Scaffold(
       body: SafeArea(
         child: Column(
@@ -154,41 +150,43 @@ class _FriendAddViewState extends State<FriendAddView> {
                   Align(
                     alignment: Alignment.center,
                     child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                    Card(
-                    child: ListTile(
-                    leading: const Icon(Icons.badge),
-                    title: const Text('Your userId'),
-                    subtitle: Text(_myUserId ?? '...'),
-                    trailing: IconButton(
-                      icon: const Icon(Icons.copy),
-                      onPressed: _myUserId == null ? null : _copyMyUserId,
-                    ),
-                  ),
-        ),
-        const SizedBox(height: 12),
-        TextField(
-                      controller: _searchController,
-                      textInputAction: TextInputAction.search,
-                      onSubmitted: (_) => _onSearch(),
-                      decoration: InputDecoration(
-                        hintText: 'Search users by userId',
-                        prefixIcon: const Icon(Icons.search),
-                        suffixIcon: IconButton(
-                          icon: const Icon(Icons.arrow_forward),
-                          onPressed: _onSearch,
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Card(
+                          child: ListTile(
+                            leading: const Icon(Icons.badge),
+                            title: const Text('Your userId'),
+                            subtitle: Text(_myUserId ?? '...'),
+                            trailing: IconButton(
+                              icon: const Icon(Icons.copy),
+                              onPressed: _myUserId == null
+                                  ? null
+                                  : _copyMyUserId,
+                            ),
+                          ),
                         ),
-                        filled: true,
-                        fillColor: Colors.grey.shade300,
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                          borderSide: BorderSide.none,
+                        const SizedBox(height: 12),
+                        TextField(
+                          controller: _searchController,
+                          textInputAction: TextInputAction.search,
+                          onSubmitted: (_) => _onSearch(),
+                          decoration: InputDecoration(
+                            hintText: 'Search users by userId',
+                            prefixIcon: const Icon(Icons.search),
+                            suffixIcon: IconButton(
+                              icon: const Icon(Icons.arrow_forward),
+                              onPressed: _onSearch,
+                            ),
+                            filled: true,
+                            fillColor: Colors.grey.shade300,
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                              borderSide: BorderSide.none,
+                            ),
+                          ),
                         ),
-                      ),
+                      ],
                     ),
-        ]
-                    )
                   ),
                 ],
               ),
@@ -220,10 +218,12 @@ class _FriendAddViewState extends State<FriendAddView> {
 
   Widget _buildSearchResult(ColorScheme cs) {
     if (_searchLoading) {
-      return const Center(child: Padding(
-        padding: EdgeInsets.all(12),
-        child: CircularProgressIndicator(),
-      ));
+      return const Center(
+        child: Padding(
+          padding: EdgeInsets.all(12),
+          child: CircularProgressIndicator(),
+        ),
+      );
     }
 
     if (_searchError != null) {
@@ -239,7 +239,8 @@ class _FriendAddViewState extends State<FriendAddView> {
     }
 
     final u = _searchedUser!;
-    final displayName = (u.username.isNotEmpty ? u.username : u.userId).toString();
+    final displayName = (u.username.isNotEmpty ? u.username : u.userId)
+        .toString();
 
     return Card(
       child: ListTile(
@@ -257,10 +258,12 @@ class _FriendAddViewState extends State<FriendAddView> {
 
   Widget _buildRequestsSection(ColorScheme cs) {
     if (_listsLoading) {
-      return const Center(child: Padding(
-        padding: EdgeInsets.all(12),
-        child: CircularProgressIndicator(),
-      ));
+      return const Center(
+        child: Padding(
+          padding: EdgeInsets.all(12),
+          child: CircularProgressIndicator(),
+        ),
+      );
     }
 
     if (_listsError != null) {
@@ -273,30 +276,38 @@ class _FriendAddViewState extends State<FriendAddView> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text('Received requests', style: Theme.of(context).textTheme.titleMedium),
+        Text(
+          'Received requests',
+          style: Theme.of(context).textTheme.titleMedium,
+        ),
         const SizedBox(height: 8),
         if (_received.isEmpty)
-          const Text('No received requests.', style: TextStyle(color: Colors.grey))
+          const Text(
+            'No received requests.',
+            style: TextStyle(color: Colors.grey),
+          )
         else
-          ..._received.map((req) => Card(
-            child: ListTile(
-              leading: const Icon(Icons.mail),
-              title: Text('From: ${req.fromUser}'),
-              trailing: Wrap(
-                spacing: 8,
-                children: [
-                  ElevatedButton(
-                    onPressed: () => _acceptFriend(req),
-                    child: const Text('Accept'),
-                  ),
-                  OutlinedButton(
-                    onPressed: () => _declineReceived(req),
-                    child: const Text('Decline'),
-                  ),
-                ],
+          ..._received.map(
+            (req) => Card(
+              child: ListTile(
+                leading: const Icon(Icons.mail),
+                title: Text('From: ${req.fromUser}'),
+                trailing: Wrap(
+                  spacing: 8,
+                  children: [
+                    ElevatedButton(
+                      onPressed: () => _acceptFriend(req),
+                      child: const Text('Accept'),
+                    ),
+                    OutlinedButton(
+                      onPressed: () => _declineReceived(req),
+                      child: const Text('Decline'),
+                    ),
+                  ],
+                ),
               ),
             ),
-          )),
+          ),
 
         const SizedBox(height: 16),
 
@@ -305,18 +316,20 @@ class _FriendAddViewState extends State<FriendAddView> {
         if (_sent.isEmpty)
           const Text('No sent requests.', style: TextStyle(color: Colors.grey))
         else
-          ..._sent.map((req) => Card(
-            child: ListTile(
-              leading: const Icon(Icons.send),
-              title: Text('To: ${req.toUser}'),
-              subtitle: Text('From: ${req.fromUser}'),
-              trailing: OutlinedButton.icon(
-                onPressed: () => _deleteSent(req),
-                icon: const Icon(Icons.delete),
-                label: const Text('Delete'),
+          ..._sent.map(
+            (req) => Card(
+              child: ListTile(
+                leading: const Icon(Icons.send),
+                title: Text('To: ${req.toUser}'),
+                subtitle: Text('From: ${req.fromUser}'),
+                trailing: OutlinedButton.icon(
+                  onPressed: () => _deleteSent(req),
+                  icon: const Icon(Icons.delete),
+                  label: const Text('Delete'),
+                ),
               ),
             ),
-          )),
+          ),
       ],
     );
   }

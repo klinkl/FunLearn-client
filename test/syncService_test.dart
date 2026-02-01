@@ -17,6 +17,7 @@ import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 import 'package:funlearn_client/data/serverApi/studySessionApi.dart';
 import 'package:funlearn_client/data/serverApi/usersApi.dart';
 import 'package:funlearn_client/data/serverApi/questApi.dart';
+import 'package:funlearn_client/data/service/batteryGate.dart';
 
 class FakeStudySessionApi implements IStudySessionApi {
   bool online = false;
@@ -70,18 +71,18 @@ class FakeUsersApi implements UsersApi {
   }
 
   @override
-  Future<List<FriendRequest>> getSent(String id) async{
+  Future<List<FriendRequest>> getSent(String id) async {
     return _requests.values.where((r) => r.fromUser == id).toList();
   }
 
   @override
-  Future<void> sendFriendRequest(FriendRequest request) async{
+  Future<void> sendFriendRequest(FriendRequest request) async {
     final key = _reqKeyFromReq(request);
     _requests[key] = request;
   }
 
   @override
-  Future<void> updateFriendRequest(FriendRequest request) async{
+  Future<void> updateFriendRequest(FriendRequest request) async {
     final key = _reqKeyFromReq(request);
     if (!_requests.containsKey(key)) {
       throw Exception('Friend request not found');
@@ -146,6 +147,8 @@ void main() {
     dbHelper = DatabaseHelper(dbPath: path);
     await dbHelper.resetDatabase();
 
+    final batteryGate = BatteryGate(criticalThreshold: 5);
+
     fakeUsersApi = FakeUsersApi();
     fakeSessionApi = FakeStudySessionApi();
     fakeQuestsApi = FakeQuestsApi();
@@ -172,6 +175,7 @@ void main() {
       studySessionController: sessionController,
       questController: questController,
       dbHelper: dbHelper,
+      batteryGate: batteryGate,
       connectivityStream: connectivityCtrl.stream,
     );
   });

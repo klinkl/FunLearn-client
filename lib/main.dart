@@ -1,15 +1,16 @@
 import 'dart:io';
-
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:sqflite_common_ffi/sqflite_ffi.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:battery_plus/battery_plus.dart';
+import 'dart:async';
+
 import 'package:funlearn_client/data/serverApi/questApi.dart';
 import 'package:funlearn_client/data/serverApi/studySessionApi.dart';
 import 'package:funlearn_client/data/userController.dart';
 import 'package:funlearn_client/data/questController.dart';
-import 'package:shared_preferences/shared_preferences.dart';
-import 'package:sqflite_common_ffi/sqflite_ffi.dart';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
-
 import 'data/databaseHelper.dart';
 import './data/serverApi/apiClient.dart';
 import './data/serverApi/usersApi.dart';
@@ -20,8 +21,6 @@ import './data/service/batteryGate.dart';
 
 import 'screens/home.dart';
 import '../theme/customColors.dart';
-import 'package:battery_plus/battery_plus.dart';
-import 'dart:async';
 
 class AppDeps {
   final DatabaseHelper dbHelper;

@@ -1,7 +1,3 @@
-import 'dart:math';
-
-import '../databaseHelper.dart';
-
 class Deck {
   int? deckId;
   String name;

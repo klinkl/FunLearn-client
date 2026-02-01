@@ -1,8 +1,7 @@
-
 import 'package:flutter/foundation.dart';
 import 'package:flutter/cupertino.dart';
-import 'package:funlearn_client/data/models/friendRequest.dart';
 
+import 'package:funlearn_client/data/models/friendRequest.dart';
 import 'databaseHelper.dart';
 import 'models/studySession.dart';
 import 'models/user.dart';
@@ -21,12 +20,14 @@ class UserController extends ChangeNotifier {
   static UserController getInstance(DatabaseHelper helper, UsersApi usersApi) {
     return _instance ??= UserController._internal(helper, usersApi);
   }
+
   static UserController getInstance_() {
     if (_instance == null) {
       throw StateError('UserController not initialized');
     }
     return _instance!;
   }
+
   Future<User> getOrCreateUser() async {
     final users = await helper.getAllUsers();
 
@@ -201,53 +202,59 @@ class UserController extends ChangeNotifier {
     return friends;
   }
 
-  @visibleForTesting
-  static void resetInstanceForTest() {
-    _instance = null;
-  }
   Future<void> sendFriendRequest(User userA, User userB) async {
-    if (userA.userId == userB.userId){
+    if (userA.userId == userB.userId) {
       throw Exception('You cannot send a friend request to yourself.');
     }
     try {
-        await usersApi.sendFriendRequest(FriendRequest(userA.userId, userB.userId, false));
+      await usersApi.sendFriendRequest(
+        FriendRequest(userA.userId, userB.userId, false),
+      );
     } catch (e) {
       throw Exception('Failed to send friend request: $e');
     }
   }
+
   Future<void> acceptFriendRequest(FriendRequest request) async {
     try {
       await usersApi.updateFriendRequest(
-          FriendRequest(request.fromUser, request.toUser, true));
-    }
-    catch (e) {
+        FriendRequest(request.fromUser, request.toUser, true),
+      );
+    } catch (e) {
       throw Exception('Failed to accept friend request: $e');
     }
   }
+
   Future<void> declineFriendRequest(FriendRequest request) async {
     try {
       await usersApi.deleteFriendRequest(request);
-    }
-    catch (e) {
+    } catch (e) {
       throw Exception('Failed to decline friend request: $e');
     }
   }
-  Future<List<FriendRequest>?> getSent() async{
+
+  Future<List<FriendRequest>?> getSent() async {
     try {
       final me = _currentUser ?? await getOrCreateUser();
       var users = await usersApi.getSent(me.userId);
       return users;
-    }catch (e) {
+    } catch (e) {
       throw Exception('Failed to get friend requests: $e');
     }
   }
-  Future<List<FriendRequest>?> getReceived() async{
+
+  Future<List<FriendRequest>?> getReceived() async {
     try {
       final me = _currentUser ?? await getOrCreateUser();
       var users = await usersApi.getReceived(me.userId);
       return users;
-    }catch (e) {
+    } catch (e) {
       throw Exception('Failed to get friend requests: $e');
     }
+  }
+
+  @visibleForTesting
+  static void resetInstanceForTest() {
+    _instance = null;
   }
 }
