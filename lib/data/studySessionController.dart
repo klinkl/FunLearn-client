@@ -81,7 +81,7 @@ class StudySessionController {
     _inFlight.add(session.studySessionId);
 
     try {
-      await studySessionApi.createStudySession(session);
+      studySessionApi.createStudySession(session);
       await helper.markStudySessionSynced(session.studySessionId);
     } catch (e) {
     } finally {
